@@ -1,12 +1,5 @@
 {% extends "_empty.html" %}
 
-{% macro language_switch(request, extra_class="") -%}
-<div class="language-switch {{ extra_class }}" aria-label="{{ t(request, 'language') }}">
-  <a href="/language/uk?next={{ request.url.path | urlencode }}" class="{% if current_lang(request) == 'uk' %}active{% endif %}" {% if current_lang(request) == 'uk' %}aria-current="true"{% endif %}>UA</a>
-  <a href="/language/en?next={{ request.url.path | urlencode }}" class="{% if current_lang(request) == 'en' %}active{% endif %}" {% if current_lang(request) == 'en' %}aria-current="true"{% endif %}>EN</a>
-</div>
-{%- endmacro %}
-
 {% block content %}
 {% if admin_session %}
 <header class="admin-header">
@@ -17,7 +10,7 @@
     <a href="/users" class="{% if request.url.path.startswith('/users') %}active{% endif %}" {% if request.url.path.startswith('/users') %}aria-current="page"{% endif %}>{{ t(request, 'users') }}</a>
   </nav>
   <div class="admin-actions">
-    {{ language_switch(request) }}
+    {% include "_language_switch.html" %}
     <form method="post" action="/logout" class="logout-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <button type="submit">{{ t(request, 'logout') }}</button>

@@ -5,7 +5,8 @@
 {% block page_content %}
 <section class="auth-shell">
   <form class="auth-panel" method="post" action="/login">
-    {{ language_switch(request, "auth-language") }}
+    {% set extra_class = "auth-language" %}
+    {% include "_language_switch.html" %}
     <h1>{{ t(request, 'admin_login') }}</h1>
     {% if message %}
       <p class="alert alert-success">{{ t(request, message) if message.startswith('flash.') else message }}</p>

@@ -1,0 +1,4 @@
+<div class="language-switch {{ extra_class | default('') }}" aria-label="{{ t(request, 'language') }}">
+  <a href="/language/uk?next={{ request.url.path | urlencode }}" class="{% if current_lang(request) == 'uk' %}active{% endif %}" {% if current_lang(request) == 'uk' %}aria-current="true"{% endif %}>UA</a>
+  <a href="/language/en?next={{ request.url.path | urlencode }}" class="{% if current_lang(request) == 'en' %}active{% endif %}" {% if current_lang(request) == 'en' %}aria-current="true"{% endif %}>EN</a>
+</div>

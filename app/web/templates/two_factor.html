@@ -5,7 +5,8 @@
 {% block page_content %}
 <section class="auth-shell">
   <form class="auth-panel" method="post" action="/2fa">
-    {{ language_switch(request, "auth-language") }}
+    {% set extra_class = "auth-language" %}
+    {% include "_language_switch.html" %}
     <h1>{{ t(request, 'two_factor_code') }}</h1>
     {% if username %}
       <p class="muted">{{ t(request, 'admin') }}: {{ username }}</p>
