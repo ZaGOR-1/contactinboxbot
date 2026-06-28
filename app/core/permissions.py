@@ -55,6 +55,8 @@ def require_admin_session(
 
     session = get_session_from_request(request, app_settings)
     if session is None:
+        if request.method in {"GET", "HEAD"}:
+            raise_login_required()
         raise_forbidden()
     return session
 
@@ -87,3 +89,13 @@ def raise_forbidden() -> None:
     if HTTPException is None or status is None:
         raise PermissionError("Forbidden")
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+
+
+def raise_login_required() -> None:
+    if HTTPException is None or status is None:
+        raise PermissionError("Login required")
+    raise HTTPException(
+        status_code=status.HTTP_303_SEE_OTHER,
+        detail="Login required",
+        headers={"Location": "/login"},
+    )

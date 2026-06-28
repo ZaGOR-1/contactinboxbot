@@ -410,6 +410,7 @@ https://admintextbot.hotzagor.tech
 Очікувано:
 
 - unauthenticated visitors бачать login або Basic Auth;
+- відкриття `/` без session перенаправляє на `/login`;
 - після login відкривається dashboard;
 - `/messages` показує messages;
 - `/users` показує users;
@@ -933,6 +934,7 @@ https://admintextbot.hotzagor.tech
 Expected:
 
 - unauthenticated visitors see login or Basic Auth;
+- opening `/` without a session redirects to `/login`;
 - after login, dashboard opens;
 - `/messages` shows messages;
 - `/users` shows users;

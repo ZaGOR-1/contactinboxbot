@@ -29,7 +29,8 @@ def test_protected_get_routes_require_login() -> None:
 
     for path in ["/", "/messages", "/messages/1", "/users", "/users/1"]:
         response = client.get(path)
-        assert response.status_code == 403
+        assert response.status_code == 303
+        assert response.headers["location"] == "/login"
 
 
 def test_post_routes_require_session_and_csrf() -> None:

@@ -250,6 +250,7 @@ https://admintextbot.hotzagor.tech
 ```
 
 Без авторизації доступний тільки login flow.
+Якщо відкрити `/` без session, застосунок перенаправить на `/login`.
 
 Після login:
 
@@ -637,6 +638,7 @@ https://admintextbot.hotzagor.tech
 ```
 
 Without authorization, only the login flow is available.
+Opening `/` without a session redirects to `/login`.
 
 After login:
 

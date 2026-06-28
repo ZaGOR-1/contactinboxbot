@@ -22,7 +22,7 @@ def create_app(settings: Settings | None = None) -> Any:
 
     from fastapi import FastAPI, Request
     from fastapi.exceptions import HTTPException
-    from fastapi.responses import HTMLResponse
+    from fastapi.responses import HTMLResponse, RedirectResponse
     from fastapi.staticfiles import StaticFiles
     from fastapi.templating import Jinja2Templates
     from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -72,6 +72,9 @@ def create_app(settings: Settings | None = None) -> Any:
         request: Request,
         exc: HTTPException,
     ) -> HTMLResponse:
+        location = exc.headers.get("Location") if exc.headers else None
+        if 300 <= exc.status_code < 400 and location:
+            return RedirectResponse(location, status_code=exc.status_code)
         if exc.status_code >= 500:
             logger.error("HTTP exception", extra={"status_code": exc.status_code, "path": request.url.path})
         return render_error_page(request, exc.status_code, templates)
@@ -81,6 +84,9 @@ def create_app(settings: Settings | None = None) -> Any:
         request: Request,
         exc: StarletteHTTPException,
     ) -> HTMLResponse:
+        location = exc.headers.get("Location") if exc.headers else None
+        if 300 <= exc.status_code < 400 and location:
+            return RedirectResponse(location, status_code=exc.status_code)
         if exc.status_code >= 500:
             logger.error("HTTP exception", extra={"status_code": exc.status_code, "path": request.url.path})
         return render_error_page(request, exc.status_code, templates)
