@@ -27,9 +27,19 @@ def create_app(settings: Settings | None = None) -> Any:
     from fastapi.templating import Jinja2Templates
     from starlette.exceptions import HTTPException as StarletteHTTPException
 
-    templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
     from app.web.i18n import get_language, translate
 
+    def i18n_context_processor(request: Request) -> dict[str, Any]:
+        return {
+            "current_lang": get_language,
+            "language": get_language(request),
+            "t": translate,
+        }
+
+    templates = Jinja2Templates(
+        directory=str(TEMPLATES_DIR),
+        context_processors=[i18n_context_processor],
+    )
     templates.env.globals["current_lang"] = get_language
     templates.env.globals["t"] = translate
 
