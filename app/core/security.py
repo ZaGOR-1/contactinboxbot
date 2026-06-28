@@ -12,11 +12,6 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
-try:
-    from passlib.context import CryptContext
-except (ImportError, ModuleNotFoundError):
-    CryptContext = None  # type: ignore[assignment]
-
 from app.core.config import Settings, get_settings
 
 
@@ -43,23 +38,14 @@ class PendingTwoFactorData:
 
 
 class PasswordHasher:
-    """Password hashing facade.
+    """Password hashing facade based on PBKDF2-SHA256.
 
-    Production uses passlib bcrypt when dependencies are installed. A PBKDF2
-    fallback keeps local imports usable before `pip install -r requirements.txt`.
+    The project originally allowed passlib/bcrypt, but bcrypt rejects passwords
+    longer than 72 bytes. PBKDF2 keeps admin password handling dependency-light
+    and avoids surprising failures for long or non-ASCII passwords.
     """
 
-    def __init__(self) -> None:
-        self._context = (
-            CryptContext(schemes=["bcrypt"], deprecated="auto")
-            if CryptContext is not None
-            else None
-        )
-
     def hash(self, password: str) -> str:
-        if self._context is not None:
-            return self._context.hash(password)
-
         salt = secrets.token_hex(16)
         digest = hashlib.pbkdf2_hmac(
             "sha256",
@@ -72,11 +58,7 @@ class PasswordHasher:
     def verify(self, password: str, password_hash: str) -> bool:
         if password_hash.startswith("pbkdf2_sha256$"):
             return self._verify_pbkdf2(password, password_hash)
-
-        if self._context is not None:
-            return self._context.verify(password, password_hash)
-
-        return self._verify_pbkdf2(password, password_hash)
+        return False
 
     def _verify_pbkdf2(self, password: str, password_hash: str) -> bool:
         try:
