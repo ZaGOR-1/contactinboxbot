@@ -1,0 +1,22 @@
+[Unit]
+Description=Telegram Inbox Bot Web Admin
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=telegraminbox
+Group=telegraminbox
+WorkingDirectory=/opt/telegram-inbox/app
+EnvironmentFile=/opt/telegram-inbox/app/.env
+ExecStart=/opt/telegram-inbox/app/.venv/bin/gunicorn app.web.main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 127.0.0.1:8000 --access-logfile -
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/telegram-inbox/app
+
+[Install]
+WantedBy=multi-user.target

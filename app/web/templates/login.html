@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Login | Telegram Inbox Bot{% endblock %}
+
+{% block page_content %}
+<section class="auth-shell">
+  <form class="auth-panel" method="post" action="/login">
+    <h1>Admin Login</h1>
+    {% if message %}
+      <p class="alert alert-success">{{ message }}</p>
+    {% endif %}
+    {% if error %}
+      <p class="alert alert-error">{{ error }}</p>
+    {% endif %}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label for="username">Username</label>
+    <input id="username" name="username" type="text" autocomplete="username" value="{{ username or '' }}" required autofocus>
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required>
+    <button type="submit">Login</button>
+  </form>
+</section>
+{% endblock %}

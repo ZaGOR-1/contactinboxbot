@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Users | Telegram Inbox Bot{% endblock %}
+
+{% block page_content %}
+<section class="page-heading">
+  <div>
+    <h1>Users</h1>
+    <p class="muted">{{ pagination.total }} users found.</p>
+  </div>
+</section>
+
+{% if flash %}
+  <p class="alert alert-success">{{ flash }}</p>
+{% endif %}
+
+<section class="panel filter-panel">
+  <form class="filters-form users-filters" method="get" action="/users">
+    <label>
+      Search
+      <input name="q" type="search" value="{{ filters.q }}" placeholder="Name, username, Telegram ID">
+    </label>
+    <label>
+      Blocked
+      <select name="blocked">
+        <option value="" {% if not filters.blocked %}selected{% endif %}>All</option>
+        <option value="blocked" {% if filters.blocked == 'blocked' %}selected{% endif %}>Blocked</option>
+        <option value="active" {% if filters.blocked == 'active' %}selected{% endif %}>Not blocked</option>
+      </select>
+    </label>
+    <button type="submit">Apply</button>
+    <a class="button-link" href="/users">Reset</a>
+  </form>
+</section>
+
+<section class="panel">
+  <div class="panel-header">
+    <h2>All users</h2>
+  </div>
+  {% if rows %}
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Username</th>
+            <th>Telegram ID</th>
+            <th>Messages</th>
+            <th>Last message</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user, message_count in rows %}
+            <tr>
+              <td>
+                {% if user.first_name or user.last_name %}
+                  {{ [user.first_name, user.last_name] | reject('none') | join(' ') }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td>{{ '@' ~ user.username if user.username else '-' }}</td>
+              <td>{{ user.telegram_id }}</td>
+              <td>{{ message_count }}</td>
+              <td>{{ user.last_message_at.strftime('%Y-%m-%d %H:%M') if user.last_message_at else '-' }}</td>
+              <td>
+                {% if user.is_blocked %}
+                  <span class="status-pill status-failed">blocked</span>
+                {% else %}
+                  <span class="status-pill">active</span>
+                {% endif %}
+              </td>
+              <td class="table-actions"><a href="/users/{{ user.id }}">Open</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      {% if pagination.prev_url %}
+        <a class="button-link" href="{{ pagination.prev_url }}">Previous</a>
+      {% endif %}
+      <span>Page {{ pagination.page }} of {{ pagination.pages }}</span>
+      {% if pagination.next_url %}
+        <a class="button-link" href="{{ pagination.next_url }}">Next</a>
+      {% endif %}
+    </div>
+  {% else %}
+    <p class="empty-state">No users match these filters.</p>
+  {% endif %}
+</section>
+{% endblock %}

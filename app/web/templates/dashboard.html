@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Telegram Inbox Bot{% endblock %}
+
+{% block page_content %}
+<section class="page-heading">
+  <div>
+    <h1>Dashboard</h1>
+    <p class="muted">Inbox overview and newest messages.</p>
+  </div>
+  <a class="button-link" href="/messages?status=new">Unread messages</a>
+</section>
+
+<section class="stats-grid" aria-label="Dashboard stats">
+  <article class="stat-card">
+    <span>Total users</span>
+    <strong>{{ stats.total_users }}</strong>
+  </article>
+  <article class="stat-card">
+    <span>Total messages</span>
+    <strong>{{ stats.total_messages }}</strong>
+  </article>
+  <article class="stat-card stat-new">
+    <span>New messages</span>
+    <strong>{{ stats.new_messages }}</strong>
+  </article>
+  <article class="stat-card">
+    <span>Blocked users</span>
+    <strong>{{ stats.blocked_users }}</strong>
+  </article>
+</section>
+
+<section class="panel">
+  <div class="panel-header">
+    <h2>Latest messages</h2>
+    <a href="/messages">View all</a>
+  </div>
+  {% if latest_messages %}
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Date</th>
+            <th>User</th>
+            <th>Username</th>
+            <th>Text</th>
+            <th>Direction</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for message in latest_messages %}
+            <tr class="{% if message.status.value == 'new' %}row-new{% endif %}">
+              <td>{{ message.id }}</td>
+              <td>{{ message.created_at.strftime('%Y-%m-%d %H:%M') if message.created_at else '-' }}</td>
+              <td>
+                {% if message.user.first_name or message.user.last_name %}
+                  {{ [message.user.first_name, message.user.last_name] | reject('none') | join(' ') }}
+                {% else %}
+                  {{ message.user.telegram_id }}
+                {% endif %}
+              </td>
+              <td>{{ '@' ~ message.user.username if message.user.username else '-' }}</td>
+              <td class="truncate" title="{{ message.text }}">{{ message.text }}</td>
+              <td>{{ message.direction.value }}</td>
+              <td><span class="status-pill status-{{ message.status.value }}">{{ message.status.value }}</span></td>
+              <td class="table-actions"><a href="/users/{{ message.user_id }}">Open</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="empty-state">No messages yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

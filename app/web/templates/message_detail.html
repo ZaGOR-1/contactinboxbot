@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Message #{{ message.id }} | Telegram Inbox Bot{% endblock %}
+
+{% block page_content %}
+<section class="page-heading">
+  <div>
+    <h1>Message #{{ message.id }}</h1>
+    <p class="muted">{{ message.created_at.strftime('%Y-%m-%d %H:%M:%S') if message.created_at else '-' }}</p>
+  </div>
+  <a class="button-link" href="{{ back_url }}">Back</a>
+</section>
+
+{% if flash %}
+  <p class="alert alert-success">{{ flash }}</p>
+{% endif %}
+
+<section class="detail-grid">
+  <article class="panel detail-panel">
+    <div class="panel-header">
+      <h2>Message</h2>
+      <span class="status-pill status-{{ message.status.value }}">{{ message.status.value }}</span>
+    </div>
+    <dl class="detail-list">
+      <dt>Direction</dt>
+      <dd>{{ message.direction.value }}</dd>
+      <dt>Telegram message ID</dt>
+      <dd>{{ message.telegram_message_id or '-' }}</dd>
+      <dt>Error</dt>
+      <dd>{{ message.error_text or '-' }}</dd>
+    </dl>
+    <div class="message-body">{{ message.text }}</div>
+    {% if message.status.value == 'new' %}
+      <form method="post" action="/messages/{{ message.id }}/read" class="inline-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="next" value="/messages/{{ message.id }}">
+        <button type="submit">Mark as read</button>
+      </form>
+    {% endif %}
+  </article>
+
+  <aside class="panel detail-panel">
+    <div class="panel-header">
+      <h2>User</h2>
+      <a href="/users/{{ message.user_id }}">Open user</a>
+    </div>
+    <dl class="detail-list">
+      <dt>Name</dt>
+      <dd>
+        {% if message.user.first_name or message.user.last_name %}
+          {{ [message.user.first_name, message.user.last_name] | reject('none') | join(' ') }}
+        {% else %}
+          -
+        {% endif %}
+      </dd>
+      <dt>Username</dt>
+      <dd>{{ '@' ~ message.user.username if message.user.username else '-' }}</dd>
+      <dt>Telegram ID</dt>
+      <dd>{{ message.user.telegram_id }}</dd>
+      <dt>Blocked</dt>
+      <dd>{{ 'yes' if message.user.is_blocked else 'no' }}</dd>
+    </dl>
+  </aside>
+</section>
+{% endblock %}

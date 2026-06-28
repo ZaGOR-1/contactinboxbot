@@ -1,0 +1,22 @@
+[Unit]
+Description=Telegram Inbox Bot Telegram Polling Service
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=telegraminbox
+Group=telegraminbox
+WorkingDirectory=/opt/telegram-inbox/app
+EnvironmentFile=/opt/telegram-inbox/app/.env
+ExecStart=/opt/telegram-inbox/app/.venv/bin/python -m app.bot.main
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/telegram-inbox/app
+
+[Install]
+WantedBy=multi-user.target

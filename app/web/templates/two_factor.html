@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Two-Factor Code | Telegram Inbox Bot{% endblock %}
+
+{% block page_content %}
+<section class="auth-shell">
+  <form class="auth-panel" method="post" action="/2fa">
+    <h1>Two-Factor Code</h1>
+    {% if username %}
+      <p class="muted">Admin: {{ username }}</p>
+    {% endif %}
+    {% if error %}
+      <p class="alert alert-error">{{ error }}</p>
+    {% endif %}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label for="code">Code</label>
+    <input id="code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required autofocus>
+    <button type="submit">Verify</button>
+  </form>
+</section>
+{% endblock %}

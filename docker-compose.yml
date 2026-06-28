@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: telegram-inbox-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: telegram_inbox
+      POSTGRES_USER: telegram_inbox_user
+      POSTGRES_PASSWORD: CHANGE_ME_LOCAL_ONLY
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - telegram_inbox_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U telegram_inbox_user -d telegram_inbox"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  telegram_inbox_postgres_data:

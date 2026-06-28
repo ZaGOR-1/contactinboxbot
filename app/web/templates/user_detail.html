@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}User {{ user.telegram_id }} | Telegram Inbox Bot{% endblock %}
+
+{% block page_content %}
+<section class="page-heading">
+  <div>
+    <h1>
+      {% if user.first_name or user.last_name %}
+        {{ [user.first_name, user.last_name] | reject('none') | join(' ') }}
+      {% elif user.username %}
+        @{{ user.username }}
+      {% else %}
+        User {{ user.telegram_id }}
+      {% endif %}
+    </h1>
+    <p class="muted">Telegram ID: {{ user.telegram_id }}</p>
+  </div>
+  <a class="button-link" href="/users">Back to users</a>
+</section>
+
+{% if flash %}
+  <p class="alert alert-success">{{ flash }}</p>
+{% endif %}
+{% if error %}
+  <p class="alert alert-error">{{ error }}</p>
+{% endif %}
+
+<section class="user-layout">
+  <aside class="panel detail-panel">
+    <div class="panel-header">
+      <h2>User data</h2>
+      {% if user.is_blocked %}
+        <span class="status-pill status-failed">blocked</span>
+      {% else %}
+        <span class="status-pill">active</span>
+      {% endif %}
+    </div>
+    <dl class="detail-list user-detail-list">
+      <dt>Telegram ID</dt>
+      <dd>{{ user.telegram_id }}</dd>
+      <dt>Username</dt>
+      <dd>{{ '@' ~ user.username if user.username else '-' }}</dd>
+      <dt>First name</dt>
+      <dd>{{ user.first_name or '-' }}</dd>
+      <dt>Last name</dt>
+      <dd>{{ user.last_name or '-' }}</dd>
+      <dt>Language</dt>
+      <dd>{{ user.language_code or '-' }}</dd>
+      <dt>Created</dt>
+      <dd>{{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else '-' }}</dd>
+      <dt>Updated</dt>
+      <dd>{{ user.updated_at.strftime('%Y-%m-%d %H:%M') if user.updated_at else '-' }}</dd>
+      <dt>Last message</dt>
+      <dd>{{ user.last_message_at.strftime('%Y-%m-%d %H:%M') if user.last_message_at else '-' }}</dd>
+    </dl>
+    <div class="action-stack">
+      <form method="post" action="/users/{{ user.id }}/read">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit">Mark as read</button>
+      </form>
+      {% if user.is_blocked %}
+        <form method="post" action="/users/{{ user.id }}/unblock">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit">Unblock</button>
+        </form>
+      {% else %}
+        <form method="post" action="/users/{{ user.id }}/block" data-confirm="Block this user?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button class="danger-button" type="submit">Block</button>
+        </form>
+      {% endif %}
+    </div>
+  </aside>
+
+  <section class="panel conversation-panel">
+    <div class="panel-header">
+      <h2>Conversation</h2>
+    </div>
+    {% if conversation %}
+      <div class="chat-list" data-autoscroll="bottom">
+        {% for message in conversation %}
+          <article class="chat-message chat-{{ message.direction.value }} {% if message.status.value == 'new' %}chat-new{% endif %}">
+            <div class="chat-meta">
+              <span>{{ message.direction.value }}</span>
+              <span>{{ message.status.value }}</span>
+              <span>{{ message.created_at.strftime('%Y-%m-%d %H:%M') if message.created_at else '-' }}</span>
+            </div>
+            <div class="chat-bubble">{{ message.text }}</div>
+            {% if message.error_text %}
+              <p class="chat-error">{{ message.error_text }}</p>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="empty-state">No conversation yet.</p>
+    {% endif %}
+
+    <form class="reply-form" method="post" action="/users/{{ user.id }}/reply">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label for="reply-text">Reply</label>
+      <textarea id="reply-text" name="text" rows="5" {% if user.is_blocked %}disabled{% endif %} required></textarea>
+      <button type="submit" {% if user.is_blocked %}disabled{% endif %}>Send reply</button>
+    </form>
+  </section>
+</section>
+{% endblock %}

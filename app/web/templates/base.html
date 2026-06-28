@@ -1,0 +1,21 @@
+{% extends "_empty.html" %}
+
+{% block content %}
+{% if admin_session %}
+<header class="admin-header">
+  <a class="brand" href="/">Telegram Inbox Bot</a>
+  <nav class="admin-nav" aria-label="Admin navigation">
+    <a href="/" class="{% if request.url.path == '/' %}active{% endif %}" {% if request.url.path == '/' %}aria-current="page"{% endif %}>Dashboard</a>
+    <a href="/messages" class="{% if request.url.path.startswith('/messages') %}active{% endif %}" {% if request.url.path.startswith('/messages') %}aria-current="page"{% endif %}>Messages</a>
+    <a href="/users" class="{% if request.url.path.startswith('/users') %}active{% endif %}" {% if request.url.path.startswith('/users') %}aria-current="page"{% endif %}>Users</a>
+  </nav>
+  <form method="post" action="/logout" class="logout-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button type="submit">Logout</button>
+  </form>
+</header>
+{% endif %}
+<main class="{% if admin_session %}admin-main{% endif %}">
+  {% block page_content %}{% endblock %}
+</main>
+{% endblock %}
