@@ -1,6 +1,7 @@
 """Async SQLAlchemy database setup."""
 
 from collections.abc import AsyncIterator
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -19,7 +20,7 @@ _session_maker: async_sessionmaker[AsyncSession] | None = None
 def create_engine(settings: Settings | None = None) -> AsyncEngine:
     app_settings = settings or get_settings()
     database_url = app_settings.database_url.get_secret_value()
-    connect_args = {}
+    database_url, connect_args = normalize_database_url(database_url)
 
     if database_url.startswith("sqlite"):
         connect_args["check_same_thread"] = False
@@ -30,6 +31,39 @@ def create_engine(settings: Settings | None = None) -> AsyncEngine:
         pool_pre_ping=True,
         connect_args=connect_args,
     )
+
+
+def normalize_database_url(database_url: str) -> tuple[str, dict[str, object]]:
+    """Return SQLAlchemy URL plus driver-specific connect args.
+
+    asyncpg does not accept libpq-style `sslmode=disable` as a keyword
+    argument. Keep `.env` operator-friendly and translate it to `ssl=False`.
+    """
+
+    connect_args: dict[str, object] = {}
+    if not database_url.startswith("postgresql+asyncpg://"):
+        return database_url, connect_args
+
+    parsed = urlsplit(database_url)
+    query_items = parse_qsl(parsed.query, keep_blank_values=True)
+    kept_query_items: list[tuple[str, str]] = []
+
+    for key, value in query_items:
+        if key == "sslmode" and value.lower() == "disable":
+            connect_args["ssl"] = False
+            continue
+        kept_query_items.append((key, value))
+
+    normalized_url = urlunsplit(
+        (
+            parsed.scheme,
+            parsed.netloc,
+            parsed.path,
+            urlencode(kept_query_items),
+            parsed.fragment,
+        )
+    )
+    return normalized_url, connect_args
 
 
 def get_engine() -> AsyncEngine:
