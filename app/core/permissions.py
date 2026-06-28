@@ -20,20 +20,20 @@ except (ImportError, ModuleNotFoundError):
     status = None  # type: ignore[assignment]
 
 
-def get_client_ip(request: Request) -> str:
+def get_client_ip(request: Request, settings: Settings | None = None) -> str:
+    app_settings = settings or get_settings()
+    direct_client_ip = request.client.host if request.client is not None else ""
     forwarded_for = request.headers.get("x-forwarded-for")
-    if forwarded_for:
+    if forwarded_for and direct_client_ip in app_settings.trusted_proxy_ip_list:
         return forwarded_for.split(",", 1)[0].strip()
-    if request.client is None:
-        return ""
-    return request.client.host
+    return direct_client_ip
 
 
 def is_ip_allowed(request: Request, settings: Settings | None = None) -> bool:
     app_settings = settings or get_settings()
     if not app_settings.enable_ip_allowlist:
         return True
-    return get_client_ip(request) in app_settings.allowed_admin_ip_list
+    return get_client_ip(request, app_settings) in app_settings.allowed_admin_ip_list
 
 
 def get_session_from_request(

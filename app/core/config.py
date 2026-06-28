@@ -130,6 +130,7 @@ if PYDANTIC_AVAILABLE:
         enable_telegram_2fa: bool = Field(default=True, alias="ENABLE_TELEGRAM_2FA")
         enable_ip_allowlist: bool = Field(default=False, alias="ENABLE_IP_ALLOWLIST")
         allowed_admin_ips: str = Field(default="", alias="ALLOWED_ADMIN_IPS")
+        trusted_proxy_ips: str = Field(default="127.0.0.1,::1", alias="TRUSTED_PROXY_IPS")
 
         rate_limit_messages_per_minute: int = Field(
             default=5,
@@ -195,6 +196,14 @@ if PYDANTIC_AVAILABLE:
                 if ip.strip()
             ]
 
+        @property
+        def trusted_proxy_ip_list(self) -> list[str]:
+            return [
+                ip.strip()
+                for ip in self.trusted_proxy_ips.split(",")
+                if ip.strip()
+            ]
+
         def safe_summary(self) -> dict[str, object]:
             return _safe_summary(self)
 
@@ -219,6 +228,7 @@ else:
         enable_telegram_2fa: bool
         enable_ip_allowlist: bool
         allowed_admin_ips: str
+        trusted_proxy_ips: str
         rate_limit_messages_per_minute: int
         log_level: str
 
@@ -242,6 +252,7 @@ else:
             object.__setattr__(self, "enable_telegram_2fa", _env_bool("ENABLE_TELEGRAM_2FA", True))
             object.__setattr__(self, "enable_ip_allowlist", _env_bool("ENABLE_IP_ALLOWLIST", False))
             object.__setattr__(self, "allowed_admin_ips", _env_value("ALLOWED_ADMIN_IPS", ""))
+            object.__setattr__(self, "trusted_proxy_ips", _env_value("TRUSTED_PROXY_IPS", "127.0.0.1,::1"))
             object.__setattr__(self, "rate_limit_messages_per_minute", int(_env_value("RATE_LIMIT_MESSAGES_PER_MINUTE", "5")))
             object.__setattr__(self, "log_level", _env_value("LOG_LEVEL", "INFO").strip().upper())
 
@@ -273,6 +284,14 @@ else:
                 if ip.strip()
             ]
 
+        @property
+        def trusted_proxy_ip_list(self) -> list[str]:
+            return [
+                ip.strip()
+                for ip in self.trusted_proxy_ips.split(",")
+                if ip.strip()
+            ]
+
         def safe_summary(self) -> dict[str, object]:
             return _safe_summary(self)
 
@@ -288,6 +307,7 @@ def _safe_summary(settings: Settings) -> dict[str, object]:
         "enable_telegram_2fa": settings.enable_telegram_2fa,
         "enable_ip_allowlist": settings.enable_ip_allowlist,
         "allowed_admin_ips_count": len(settings.allowed_admin_ip_list),
+        "trusted_proxy_ips_count": len(settings.trusted_proxy_ip_list),
         "rate_limit_messages_per_minute": settings.rate_limit_messages_per_minute,
         "log_level": settings.log_level,
         "docs_enabled": settings.docs_url is not None,

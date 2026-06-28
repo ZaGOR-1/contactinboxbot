@@ -62,7 +62,20 @@ def test_service_endpoints_include_security_headers() -> None:
     response = client.get("/health")
 
     assert response.status_code == 200
-    assert response.json()["status"] == "ok"
+    assert response.json() == {"status": "ok"}
     assert response.headers["X-Robots-Tag"] == "noindex, nofollow"
     assert response.headers["X-Content-Type-Options"] == "nosniff"
     assert response.headers["X-Frame-Options"] == "DENY"
+
+
+def test_version_endpoint_does_not_expose_environment_details() -> None:
+    client = make_client()
+
+    response = client.get("/version")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["app"] == "Telegram Inbox Bot"
+    assert payload["version"] == "test"
+    assert "environment" not in payload
+    assert "docs_enabled" not in payload

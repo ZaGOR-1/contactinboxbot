@@ -30,6 +30,7 @@ class TestSettings:
     enable_telegram_2fa: bool = True
     enable_ip_allowlist: bool = False
     allowed_admin_ips: str = ""
+    trusted_proxy_ips: str = "127.0.0.1,::1"
     rate_limit_messages_per_minute: int = 5
     log_level: str = "INFO"
 
@@ -56,6 +57,10 @@ class TestSettings:
     @property
     def allowed_admin_ip_list(self) -> list[str]:
         return [ip.strip() for ip in self.allowed_admin_ips.split(",") if ip.strip()]
+
+    @property
+    def trusted_proxy_ip_list(self) -> list[str]:
+        return [ip.strip() for ip in self.trusted_proxy_ips.split(",") if ip.strip()]
 
 
 class CookieRecorder:

@@ -117,7 +117,7 @@ async def message_detail_page(
             "admin_session": admin_session,
             "csrf_token": csrf_token,
             "message": message,
-            "back_url": request.query_params.get("next") or "/messages",
+            "back_url": safe_next_url(request.query_params.get("next") or "/messages"),
             "flash": request.query_params.get("message"),
         },
     )

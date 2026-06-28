@@ -11,6 +11,17 @@ Run after installing dependencies:
 python -m pytest
 ```
 
+Run dependency and static security audits:
+
+```bash
+python -m pip install -r requirements-security.txt
+python -m piptools compile --quiet --output-file requirements.lock requirements.txt
+python -m pip_audit -r requirements.lock
+python -m bandit -r app
+```
+
+The same checks are also defined in `.github/workflows/security-audit.yml`.
+
 The test suite covers:
 
 - password hashing does not store plaintext passwords;
@@ -23,6 +34,7 @@ The test suite covers:
 - unsafe POST routes are blocked without session/CSRF;
 - `/docs`, `/redoc`, and `/openapi.json` are disabled in production;
 - `/health` returns successfully and security headers are present;
+- `/health` and `/version` do not expose environment details;
 - user upsert, message creation, search/filter, mark-as-read, block filters;
 - rate limit blocks after the configured message count;
 - login brute-force lockout triggers after 5 failed attempts from one IP;
@@ -67,6 +79,7 @@ Confirm:
 - only `22`, `80`, and `443` are open in the firewall;
 - PostgreSQL listens locally only;
 - Nginx blocks `.env`, `.git`, and hidden files;
+- Nginx sends HSTS on HTTPS responses;
 - production `/docs`, `/redoc`, and `/openapi.json` are unavailable.
 
 ## Residual Risks
@@ -84,3 +97,5 @@ Confirm:
   storage encryption.
 - If Basic Auth is enabled in Nginx, rotate its credentials separately from the
   application admin password.
+- Dependency vulnerability scanning depends on running `pip-audit` in CI or in a
+  production-like virtual environment with network access to vulnerability feeds.

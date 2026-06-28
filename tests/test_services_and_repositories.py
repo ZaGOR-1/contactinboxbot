@@ -233,6 +233,34 @@ async def test_two_factor_codes_are_hashed_expiring_and_single_use(db_session) -
 
 
 @pytest.mark.asyncio
+async def test_two_factor_new_code_invalidates_previous_active_codes(db_session) -> None:
+    admin = await AdminUserRepository(db_session).create(
+        username="admin-2fa",
+        password_hash=hash_password("password"),
+    )
+    repository = TwoFactorCodeRepository(db_session)
+    now = datetime.now(UTC)
+    old_code = await repository.create(
+        admin_user_id=admin.id,
+        code_hash=hash_password("111111"),
+        expires_at=now + timedelta(minutes=5),
+    )
+    await repository.mark_active_used_for_admin(admin_user_id=admin.id, used_at=now)
+    new_code = await repository.create(
+        admin_user_id=admin.id,
+        code_hash=hash_password("222222"),
+        expires_at=now + timedelta(minutes=5),
+    )
+    await db_session.commit()
+
+    active = await repository.get_active_for_admin(admin_user_id=admin.id, now=now)
+
+    assert old_code.used_at is not None
+    assert active is not None
+    assert active.id == new_code.id
+
+
+@pytest.mark.asyncio
 async def test_failed_telegram_reply_is_saved_as_failed_outgoing(db_session) -> None:
     user = await UserRepository(db_session).create_or_update_from_telegram(
         telegram_id=606,

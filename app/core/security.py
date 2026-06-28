@@ -63,6 +63,7 @@ class PasswordHasher:
     def _verify_pbkdf2(self, password: str, password_hash: str) -> bool:
         try:
             algorithm, iterations, salt, expected = password_hash.split("$", 3)
+            iteration_count = int(iterations)
         except ValueError:
             return False
 
@@ -73,7 +74,7 @@ class PasswordHasher:
             "sha256",
             password.encode("utf-8"),
             salt.encode("utf-8"),
-            int(iterations),
+            iteration_count,
         ).hex()
         return secrets.compare_digest(digest, expected)
 

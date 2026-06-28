@@ -55,7 +55,6 @@ https://admintextbot.hotzagor.tech
 - Let's Encrypt / Certbot
 - systemd
 - pydantic-settings
-- passlib/bcrypt
 
 ## Налаштування Telegram-бота
 
@@ -106,7 +105,7 @@ APP_ENV=production
 APP_NAME=Telegram Inbox Bot
 APP_VERSION=1.0.0
 
-DATABASE_URL=postgresql+asyncpg://telegram_inbox_user:CHANGE_ME@localhost:5432/telegram_inbox
+DATABASE_URL=postgresql+asyncpg://telegram_inbox_user:CHANGE_ME@localhost:5432/telegram_inbox?sslmode=disable
 
 TELEGRAM_BOT_TOKEN=CHANGE_ME
 ADMIN_TELEGRAM_ID=CHANGE_ME
@@ -122,6 +121,7 @@ ADMIN_PANEL_BASE_URL=https://admintextbot.hotzagor.tech
 ENABLE_TELEGRAM_2FA=true
 ENABLE_IP_ALLOWLIST=false
 ALLOWED_ADMIN_IPS=
+TRUSTED_PROXY_IPS=127.0.0.1,::1
 
 RATE_LIMIT_MESSAGES_PER_MINUTE=5
 
@@ -147,7 +147,7 @@ docker compose up -d postgres
 Використайте цей локальний `DATABASE_URL`:
 
 ```env
-DATABASE_URL=postgresql+asyncpg://telegram_inbox_user:CHANGE_ME_LOCAL_ONLY@localhost:5432/telegram_inbox
+DATABASE_URL=postgresql+asyncpg://telegram_inbox_user:CHANGE_ME_LOCAL_ONLY@localhost:5432/telegram_inbox?sslmode=disable
 ```
 
 ## Встановлення залежностей
@@ -328,7 +328,7 @@ sudo systemctl restart telegram-inbox-web
 Типовий update flow:
 
 ```bash
-cd /opt/telegram-inbox/app
+cd /var/www/contactinboxbot
 git pull
 . .venv/bin/activate
 pip install -r requirements.txt
@@ -379,10 +379,20 @@ psql -U telegram_inbox_user -h localhost telegram_inbox < telegram_inbox_backup.
 - Login має brute-force protection.
 - Optional Telegram 2FA підтримується.
 - Cookies мають `Secure`, `HttpOnly` і `SameSite`.
+- Nginx HTTPS config має HSTS.
 - Nginx має публічно відкривати тільки HTTPS.
 - Публічні firewall ports мають бути тільки `22`, `80` і `443`.
 - PostgreSQL не має бути доступним з інтернету.
 - FastAPI port `8000` не має бути доступним з інтернету.
+
+Security audit tooling:
+
+```bash
+python -m pip install -r requirements-security.txt
+python -m piptools compile --quiet --output-file requirements.lock requirements.txt
+python -m pip_audit -r requirements.lock
+python -m bandit -r app
+```
 
 ## Deployment
 
@@ -443,7 +453,6 @@ The bot lets people message you in Telegram without knowing your personal Telegr
 - Let's Encrypt / Certbot
 - systemd
 - pydantic-settings
-- passlib/bcrypt
 
 ## Telegram Bot Setup
 
@@ -494,7 +503,7 @@ APP_ENV=production
 APP_NAME=Telegram Inbox Bot
 APP_VERSION=1.0.0
 
-DATABASE_URL=postgresql+asyncpg://telegram_inbox_user:CHANGE_ME@localhost:5432/telegram_inbox
+DATABASE_URL=postgresql+asyncpg://telegram_inbox_user:CHANGE_ME@localhost:5432/telegram_inbox?sslmode=disable
 
 TELEGRAM_BOT_TOKEN=CHANGE_ME
 ADMIN_TELEGRAM_ID=CHANGE_ME
@@ -510,6 +519,7 @@ ADMIN_PANEL_BASE_URL=https://admintextbot.hotzagor.tech
 ENABLE_TELEGRAM_2FA=true
 ENABLE_IP_ALLOWLIST=false
 ALLOWED_ADMIN_IPS=
+TRUSTED_PROXY_IPS=127.0.0.1,::1
 
 RATE_LIMIT_MESSAGES_PER_MINUTE=5
 
@@ -535,7 +545,7 @@ docker compose up -d postgres
 Use this local `DATABASE_URL`:
 
 ```env
-DATABASE_URL=postgresql+asyncpg://telegram_inbox_user:CHANGE_ME_LOCAL_ONLY@localhost:5432/telegram_inbox
+DATABASE_URL=postgresql+asyncpg://telegram_inbox_user:CHANGE_ME_LOCAL_ONLY@localhost:5432/telegram_inbox?sslmode=disable
 ```
 
 ## Install Dependencies
@@ -716,7 +726,7 @@ sudo systemctl restart telegram-inbox-web
 Typical update flow:
 
 ```bash
-cd /opt/telegram-inbox/app
+cd /var/www/contactinboxbot
 git pull
 . .venv/bin/activate
 pip install -r requirements.txt
@@ -767,10 +777,20 @@ Store backups outside public web directories. Do not commit backups to Git.
 - Login has brute-force protection.
 - Optional Telegram 2FA is supported.
 - Cookies are `Secure`, `HttpOnly`, and `SameSite`.
+- The Nginx HTTPS config sends HSTS.
 - Nginx should expose only HTTPS publicly.
 - Public firewall ports should be only `22`, `80`, and `443`.
 - PostgreSQL must not be exposed to the internet.
 - FastAPI port `8000` must not be exposed to the internet.
+
+Security audit tooling:
+
+```bash
+python -m pip install -r requirements-security.txt
+python -m piptools compile --quiet --output-file requirements.lock requirements.txt
+python -m pip_audit -r requirements.lock
+python -m bandit -r app
+```
 
 ## Deployment
 

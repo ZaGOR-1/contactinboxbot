@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from pathlib import Path
+from types import SimpleNamespace
 
+from app.core.permissions import get_client_ip
 from app.core.security import (
     CSRF_COOKIE_NAME,
     PENDING_2FA_COOKIE_NAME,
@@ -32,6 +34,8 @@ def test_password_hash_is_not_plaintext_and_verifies() -> None:
     assert password_hash != password
     assert verify_password(password, password_hash)
     assert not verify_password("wrong-password", password_hash)
+    assert not verify_password(password, "pbkdf2_sha256$not-int$salt$digest")
+    assert not verify_password(password, "pbkdf2_sha256$390000$salt")
 
 
 def test_signed_session_round_trip_rejects_tampering_and_expiration() -> None:
@@ -118,6 +122,21 @@ def test_session_cookies_are_cleared_with_matching_flags() -> None:
     assert response.deleted[0][1]["httponly"] is True
     assert response.deleted[0][1]["samesite"] == "lax"
     assert response.deleted[1][0] == PENDING_2FA_COOKIE_NAME
+
+
+def test_x_forwarded_for_is_used_only_from_trusted_proxy() -> None:
+    settings = TestSettings(trusted_proxy_ips="127.0.0.1")
+    trusted_request = SimpleNamespace(
+        headers={"x-forwarded-for": "203.0.113.10, 127.0.0.1"},
+        client=SimpleNamespace(host="127.0.0.1"),
+    )
+    direct_request = SimpleNamespace(
+        headers={"x-forwarded-for": "203.0.113.10"},
+        client=SimpleNamespace(host="198.51.100.5"),
+    )
+
+    assert get_client_ip(trusted_request, settings) == "203.0.113.10"
+    assert get_client_ip(direct_request, settings) == "198.51.100.5"
 
 
 def test_env_files_and_examples_do_not_expose_real_secrets() -> None:

@@ -75,14 +75,14 @@ python3 --version
 Створіть окремого system user:
 
 ```bash
-sudo adduser --system --group --home /opt/telegram-inbox telegraminbox
+sudo adduser --system --group --home /var/www/contactinboxbot telegraminbox
 ```
 
 Створіть директорію застосунку:
 
 ```bash
-sudo mkdir -p /opt/telegram-inbox/app
-sudo chown -R telegraminbox:telegraminbox /opt/telegram-inbox
+sudo mkdir -p /var/www/contactinboxbot
+sudo chown -R telegraminbox:telegraminbox /var/www/contactinboxbot
 ```
 
 ## 4. Клонування проєкту
@@ -90,13 +90,13 @@ sudo chown -R telegraminbox:telegraminbox /opt/telegram-inbox
 Клонуйте repository від імені окремого user:
 
 ```bash
-sudo -u telegraminbox git clone YOUR_REPOSITORY_URL /opt/telegram-inbox/app
+sudo -u telegraminbox git clone YOUR_REPOSITORY_URL /var/www/contactinboxbot
 ```
 
 Перейдіть у проєкт:
 
 ```bash
-cd /opt/telegram-inbox/app
+cd /var/www/contactinboxbot
 ```
 
 ## 5. Virtual environment
@@ -164,7 +164,7 @@ APP_ENV=production
 APP_NAME=Telegram Inbox Bot
 APP_VERSION=1.0.0
 
-DATABASE_URL=postgresql+asyncpg://telegram_inbox_user:CHANGE_ME_STRONG_DB_PASSWORD@localhost:5432/telegram_inbox
+DATABASE_URL=postgresql+asyncpg://telegram_inbox_user:CHANGE_ME_STRONG_DB_PASSWORD@localhost:5432/telegram_inbox?sslmode=disable
 
 TELEGRAM_BOT_TOKEN=CHANGE_ME
 ADMIN_TELEGRAM_ID=CHANGE_ME
@@ -180,6 +180,7 @@ ADMIN_PANEL_BASE_URL=https://admintextbot.hotzagor.tech
 ENABLE_TELEGRAM_2FA=true
 ENABLE_IP_ALLOWLIST=false
 ALLOWED_ADMIN_IPS=
+TRUSTED_PROXY_IPS=127.0.0.1,::1
 
 RATE_LIMIT_MESSAGES_PER_MINUTE=5
 
@@ -453,7 +454,7 @@ sudo systemctl reload nginx
 ## 18. Оновлення після git pull
 
 ```bash
-cd /opt/telegram-inbox/app
+cd /var/www/contactinboxbot
 sudo -u telegraminbox git pull
 sudo -u telegraminbox .venv/bin/pip install -r requirements.txt
 sudo -u telegraminbox .venv/bin/alembic upgrade head
@@ -467,21 +468,21 @@ sudo systemctl restart telegram-inbox-web telegram-inbox-bot
 Створіть backup directory:
 
 ```bash
-sudo mkdir -p /opt/telegram-inbox/backups
-sudo chown telegraminbox:telegraminbox /opt/telegram-inbox/backups
-sudo chmod 700 /opt/telegram-inbox/backups
+sudo mkdir -p /var/backups/contactinboxbot
+sudo chown telegraminbox:telegraminbox /var/backups/contactinboxbot
+sudo chmod 700 /var/backups/contactinboxbot
 ```
 
 Backup:
 
 ```bash
-sudo -u telegraminbox pg_dump -U telegram_inbox_user -h localhost telegram_inbox > /opt/telegram-inbox/backups/telegram_inbox_$(date +%F_%H-%M).sql
+sudo -u telegraminbox pg_dump -U telegram_inbox_user -h localhost telegram_inbox > /var/backups/contactinboxbot/telegram_inbox_$(date +%F_%H-%M).sql
 ```
 
 Restore:
 
 ```bash
-sudo -u telegraminbox psql -U telegram_inbox_user -h localhost telegram_inbox < /opt/telegram-inbox/backups/telegram_inbox_backup.sql
+sudo -u telegraminbox psql -U telegram_inbox_user -h localhost telegram_inbox < /var/backups/contactinboxbot/telegram_inbox_backup.sql
 ```
 
 Не зберігайте backups у публічній web-директорії.
@@ -498,7 +499,7 @@ docker compose up -d postgres
 Використайте:
 
 ```env
-DATABASE_URL=postgresql+asyncpg://telegram_inbox_user:CHANGE_ME_LOCAL_ONLY@localhost:5432/telegram_inbox
+DATABASE_URL=postgresql+asyncpg://telegram_inbox_user:CHANGE_ME_LOCAL_ONLY@localhost:5432/telegram_inbox?sslmode=disable
 ```
 
 Compose file прив'язує PostgreSQL до:
@@ -517,11 +518,21 @@ Compose file прив'язує PostgreSQL до:
 - FastAPI слухає `127.0.0.1:8000`.
 - Firewall відкриває тільки `22`, `80`, `443`.
 - Nginx terminates HTTPS.
+- Nginx sends HSTS.
 - Certbot renewal test проходить.
 - `/docs`, `/redoc` і `/openapi.json` вимкнені у production.
 - Admin login працює.
 - Optional Telegram 2FA працює, якщо enabled.
 - systemd services restart on failure.
+
+Security audit:
+
+```bash
+sudo -u telegraminbox .venv/bin/pip install -r requirements-security.txt
+sudo -u telegraminbox .venv/bin/python -m piptools compile --quiet --output-file requirements.lock requirements.txt
+sudo -u telegraminbox .venv/bin/python -m pip_audit -r requirements.lock
+sudo -u telegraminbox .venv/bin/python -m bandit -r app
+```
 - Logs не показують passwords, tokens або session cookies.
 
 [English version](#english) | [До початку](#ubuntu-server-deployment-guide)
@@ -599,14 +610,14 @@ Use Python 3.12+ in production.
 Create a dedicated system user:
 
 ```bash
-sudo adduser --system --group --home /opt/telegram-inbox telegraminbox
+sudo adduser --system --group --home /var/www/contactinboxbot telegraminbox
 ```
 
 Create application directory:
 
 ```bash
-sudo mkdir -p /opt/telegram-inbox/app
-sudo chown -R telegraminbox:telegraminbox /opt/telegram-inbox
+sudo mkdir -p /var/www/contactinboxbot
+sudo chown -R telegraminbox:telegraminbox /var/www/contactinboxbot
 ```
 
 ## 4. Clone Project
@@ -614,13 +625,13 @@ sudo chown -R telegraminbox:telegraminbox /opt/telegram-inbox
 Clone the repository as the dedicated user:
 
 ```bash
-sudo -u telegraminbox git clone YOUR_REPOSITORY_URL /opt/telegram-inbox/app
+sudo -u telegraminbox git clone YOUR_REPOSITORY_URL /var/www/contactinboxbot
 ```
 
 Enter the project:
 
 ```bash
-cd /opt/telegram-inbox/app
+cd /var/www/contactinboxbot
 ```
 
 ## 5. Create Virtual Environment
@@ -688,7 +699,7 @@ APP_ENV=production
 APP_NAME=Telegram Inbox Bot
 APP_VERSION=1.0.0
 
-DATABASE_URL=postgresql+asyncpg://telegram_inbox_user:CHANGE_ME_STRONG_DB_PASSWORD@localhost:5432/telegram_inbox
+DATABASE_URL=postgresql+asyncpg://telegram_inbox_user:CHANGE_ME_STRONG_DB_PASSWORD@localhost:5432/telegram_inbox?sslmode=disable
 
 TELEGRAM_BOT_TOKEN=CHANGE_ME
 ADMIN_TELEGRAM_ID=CHANGE_ME
@@ -704,6 +715,7 @@ ADMIN_PANEL_BASE_URL=https://admintextbot.hotzagor.tech
 ENABLE_TELEGRAM_2FA=true
 ENABLE_IP_ALLOWLIST=false
 ALLOWED_ADMIN_IPS=
+TRUSTED_PROXY_IPS=127.0.0.1,::1
 
 RATE_LIMIT_MESSAGES_PER_MINUTE=5
 
@@ -977,7 +989,7 @@ sudo systemctl reload nginx
 ## 18. Update After git pull
 
 ```bash
-cd /opt/telegram-inbox/app
+cd /var/www/contactinboxbot
 sudo -u telegraminbox git pull
 sudo -u telegraminbox .venv/bin/pip install -r requirements.txt
 sudo -u telegraminbox .venv/bin/alembic upgrade head
@@ -991,21 +1003,21 @@ Check logs after restart.
 Create backup directory:
 
 ```bash
-sudo mkdir -p /opt/telegram-inbox/backups
-sudo chown telegraminbox:telegraminbox /opt/telegram-inbox/backups
-sudo chmod 700 /opt/telegram-inbox/backups
+sudo mkdir -p /var/backups/contactinboxbot
+sudo chown telegraminbox:telegraminbox /var/backups/contactinboxbot
+sudo chmod 700 /var/backups/contactinboxbot
 ```
 
 Backup:
 
 ```bash
-sudo -u telegraminbox pg_dump -U telegram_inbox_user -h localhost telegram_inbox > /opt/telegram-inbox/backups/telegram_inbox_$(date +%F_%H-%M).sql
+sudo -u telegraminbox pg_dump -U telegram_inbox_user -h localhost telegram_inbox > /var/backups/contactinboxbot/telegram_inbox_$(date +%F_%H-%M).sql
 ```
 
 Restore:
 
 ```bash
-sudo -u telegraminbox psql -U telegram_inbox_user -h localhost telegram_inbox < /opt/telegram-inbox/backups/telegram_inbox_backup.sql
+sudo -u telegraminbox psql -U telegram_inbox_user -h localhost telegram_inbox < /var/backups/contactinboxbot/telegram_inbox_backup.sql
 ```
 
 Do not store backups in a public web directory.
@@ -1022,7 +1034,7 @@ docker compose up -d postgres
 Use:
 
 ```env
-DATABASE_URL=postgresql+asyncpg://telegram_inbox_user:CHANGE_ME_LOCAL_ONLY@localhost:5432/telegram_inbox
+DATABASE_URL=postgresql+asyncpg://telegram_inbox_user:CHANGE_ME_LOCAL_ONLY@localhost:5432/telegram_inbox?sslmode=disable
 ```
 
 The Compose file binds PostgreSQL to:
@@ -1041,11 +1053,21 @@ The Compose file binds PostgreSQL to:
 - FastAPI listens on `127.0.0.1:8000`.
 - Firewall exposes only `22`, `80`, `443`.
 - Nginx terminates HTTPS.
+- Nginx sends HSTS.
 - Certbot renewal test passes.
 - `/docs`, `/redoc`, and `/openapi.json` are disabled in production.
 - Admin login works.
 - Optional Telegram 2FA works if enabled.
 - systemd services restart on failure.
+
+Security audit:
+
+```bash
+sudo -u telegraminbox .venv/bin/pip install -r requirements-security.txt
+sudo -u telegraminbox .venv/bin/python -m piptools compile --quiet --output-file requirements.lock requirements.txt
+sudo -u telegraminbox .venv/bin/python -m pip_audit -r requirements.lock
+sudo -u telegraminbox .venv/bin/python -m bandit -r app
+```
 - Logs do not expose passwords, tokens, or session cookies.
 
 [Українська версія](#українська) | [Back to top](#ubuntu-server-deployment-guide)

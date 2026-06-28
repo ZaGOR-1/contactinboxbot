@@ -466,6 +466,17 @@ class TwoFactorCodeRepository:
         await self.session.flush()
         return code
 
+    async def mark_active_used_for_admin(self, *, admin_user_id: int, used_at: datetime) -> None:
+        await self.session.execute(
+            update(TwoFactorCode)
+            .where(
+                TwoFactorCode.admin_user_id == admin_user_id,
+                TwoFactorCode.used_at.is_(None),
+                TwoFactorCode.expires_at > used_at,
+            )
+            .values(used_at=used_at)
+        )
+
     async def get_active_for_admin(
         self,
         *,

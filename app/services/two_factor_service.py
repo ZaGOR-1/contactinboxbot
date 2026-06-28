@@ -37,7 +37,9 @@ class TwoFactorService:
 
     async def create_and_send_code(self, admin_user: AdminUser) -> None:
         code = self.generate_code()
-        expires_at = datetime.now(UTC) + timedelta(minutes=TWO_FACTOR_CODE_MINUTES)
+        now = datetime.now(UTC)
+        await self.codes.mark_active_used_for_admin(admin_user_id=admin_user.id, used_at=now)
+        expires_at = now + timedelta(minutes=TWO_FACTOR_CODE_MINUTES)
         await self.codes.create(
             admin_user_id=admin_user.id,
             code_hash=hash_password(code),

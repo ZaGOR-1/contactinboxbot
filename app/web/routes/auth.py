@@ -9,6 +9,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings
+from app.core.logging import get_logger
 from app.core.permissions import get_client_ip, require_admin_session, verify_csrf_request
 from app.core.security import (
     PENDING_2FA_COOKIE_NAME,
@@ -29,6 +30,7 @@ from app.services.two_factor_service import TwoFactorService
 
 
 router = APIRouter(tags=["auth"])
+logger = get_logger(__name__)
 
 
 def templates(request: Request) -> Any:
@@ -83,7 +85,8 @@ async def login_submit(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
 ) -> Any:
-    await verify_csrf_request(request, settings(request))
+    app_settings = settings(request)
+    await verify_csrf_request(request, app_settings)
     form = await request.form()
     username = str(form.get("username", "")).strip()
     password = str(form.get("password", ""))
@@ -100,7 +103,7 @@ async def login_submit(
     result = await auth_service.authenticate(
         username=username,
         password=password,
-        ip_address=get_client_ip(request),
+        ip_address=get_client_ip(request, app_settings),
     )
 
     if not result.success or result.admin_user is None:
@@ -112,7 +115,6 @@ async def login_submit(
             status_code=status.HTTP_401_UNAUTHORIZED if not result.locked else status.HTTP_429_TOO_MANY_REQUESTS,
         )
 
-    app_settings = settings(request)
     if app_settings.enable_telegram_2fa:
         try:
             await TwoFactorService(db_session, app_settings).create_and_send_code(result.admin_user)
@@ -125,6 +127,10 @@ async def login_submit(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         except Exception:
+            logger.exception(
+                "Failed to send Telegram 2FA code",
+                extra={"admin_user_id": result.admin_user.id, "username": result.admin_user.username},
+            )
             await db_session.rollback()
             return render_with_csrf(
                 request,
