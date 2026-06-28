@@ -11,6 +11,7 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 
 revision: str = "20260628_0001"
@@ -19,14 +20,45 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
-message_direction = sa.Enum("incoming", "outgoing", name="message_direction")
-message_status = sa.Enum("new", "read", "answered", "failed", name="message_status")
+message_direction = postgresql.ENUM(
+    "incoming",
+    "outgoing",
+    name="message_direction",
+    create_type=False,
+)
+message_status = postgresql.ENUM(
+    "new",
+    "read",
+    "answered",
+    "failed",
+    name="message_status",
+    create_type=False,
+)
 
 
 def upgrade() -> None:
-    bind = op.get_bind()
-    message_direction.create(bind, checkfirst=True)
-    message_status.create(bind, checkfirst=True)
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            CREATE TYPE message_direction AS ENUM ('incoming', 'outgoing');
+        EXCEPTION
+            WHEN duplicate_object THEN NULL;
+        END
+        $$;
+        """
+    )
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            CREATE TYPE message_status AS ENUM ('new', 'read', 'answered', 'failed');
+        EXCEPTION
+            WHEN duplicate_object THEN NULL;
+        END
+        $$;
+        """
+    )
 
     op.create_table(
         "users",
