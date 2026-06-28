@@ -55,7 +55,8 @@ These require a real Telegram bot token and a reachable production-like server:
 7. Exercise `/messages` search and filters together.
 8. Exercise `/users` search and blocked/active filters together.
 9. Mark a message or user conversation as read.
-10. Log out and confirm protected pages return `403` until login.
+10. Log out and confirm protected GET pages redirect to `/login`, while unsafe
+    POST actions return `403` without a valid session and CSRF token.
 
 ## Manual Deployment Checks
 

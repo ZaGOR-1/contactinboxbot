@@ -5,8 +5,8 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=telegraminbox
-Group=telegraminbox
+User=zagor
+Group=zagor
 WorkingDirectory=/var/www/contactinboxbot
 EnvironmentFile=/var/www/contactinboxbot/.env
 ExecStart=/var/www/contactinboxbot/.venv/bin/gunicorn app.web.main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 127.0.0.1:8000 --access-logfile -

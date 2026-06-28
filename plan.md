@@ -587,7 +587,7 @@ LOG_LEVEL=INFO
 ### systemd web service
 
 - Запуск FastAPI через `uvicorn` або `gunicorn` + `UvicornWorker`.
-- Робота від Linux-користувача `telegraminbox`.
+- Робота від Linux-користувача `zagor`.
 - `Restart=on-failure`.
 - `EnvironmentFile` вказує на production `.env`.
 - Автозапуск після reboot.
@@ -595,7 +595,7 @@ LOG_LEVEL=INFO
 ### systemd bot service
 
 - Запуск `app.bot.main`.
-- Робота від Linux-користувача `telegraminbox`.
+- Робота від Linux-користувача `zagor`.
 - `Restart=on-failure`.
 - `EnvironmentFile` вказує на production `.env`.
 - Автозапуск після reboot.
@@ -643,7 +643,7 @@ DEPLOY має містити повну інструкцію для Ubuntu Serve
 - створення бази `telegram_inbox`;
 - створення користувача PostgreSQL `telegram_inbox_user`;
 - клонування проєкту;
-- створення Linux-користувача `telegraminbox`;
+- створення Linux-користувача `zagor`;
 - створення venv;
 - встановлення `requirements.txt`;
 - налаштування `.env`;

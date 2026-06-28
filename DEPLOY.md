@@ -72,25 +72,26 @@ python3 --version
 
 ## 3. Linux-користувач
 
-Створіть окремого system user:
+Ця інструкція адаптована під поточний VPS, де проєкт працює від user `zagor`.
+Перевірте, що user існує:
 
 ```bash
-sudo adduser --system --group --home /var/www/contactinboxbot telegraminbox
+id zagor
 ```
 
 Створіть директорію застосунку:
 
 ```bash
 sudo mkdir -p /var/www/contactinboxbot
-sudo chown -R telegraminbox:telegraminbox /var/www/contactinboxbot
+sudo chown -R zagor:zagor /var/www/contactinboxbot
 ```
 
 ## 4. Клонування проєкту
 
-Клонуйте repository від імені окремого user:
+Клонуйте repository від імені deploy user:
 
 ```bash
-sudo -u telegraminbox git clone YOUR_REPOSITORY_URL /var/www/contactinboxbot
+sudo -u zagor git clone YOUR_REPOSITORY_URL /var/www/contactinboxbot
 ```
 
 Перейдіть у проєкт:
@@ -102,9 +103,9 @@ cd /var/www/contactinboxbot
 ## 5. Virtual environment
 
 ```bash
-sudo -u telegraminbox python3 -m venv .venv
-sudo -u telegraminbox .venv/bin/pip install --upgrade pip
-sudo -u telegraminbox .venv/bin/pip install -r requirements.txt
+sudo -u zagor python3 -m venv .venv
+sudo -u zagor .venv/bin/pip install --upgrade pip
+sudo -u zagor .venv/bin/pip install -r requirements.txt
 ```
 
 ## 6. PostgreSQL
@@ -153,8 +154,8 @@ sudo ss -ltnp | grep 5432
 Створіть `.env`:
 
 ```bash
-sudo -u telegraminbox cp .env.example .env
-sudo -u telegraminbox nano .env
+sudo -u zagor cp .env.example .env
+sudo -u zagor nano .env
 ```
 
 Production `.env` має виглядати так:
@@ -199,7 +200,7 @@ PY
 Захистіть `.env`:
 
 ```bash
-sudo chown telegraminbox:telegraminbox .env
+sudo chown zagor:zagor .env
 sudo chmod 600 .env
 ```
 
@@ -208,7 +209,7 @@ sudo chmod 600 .env
 ## 9. Alembic-міграції
 
 ```bash
-sudo -u telegraminbox .venv/bin/alembic upgrade head
+sudo -u zagor .venv/bin/alembic upgrade head
 ```
 
 Це створить:
@@ -225,7 +226,7 @@ sudo -u telegraminbox .venv/bin/alembic upgrade head
 Запустіть з interactive terminal:
 
 ```bash
-sudo -u telegraminbox .venv/bin/python -m app.cli.create_admin
+sudo -u zagor .venv/bin/python -m app.cli.create_admin
 ```
 
 Команда запитає username і password. Password зберігається тільки як hash.
@@ -233,7 +234,7 @@ sudo -u telegraminbox .venv/bin/python -m app.cli.create_admin
 Якщо пізніше треба замінити password:
 
 ```bash
-sudo -u telegraminbox .venv/bin/python -m app.cli.create_admin --username admin --replace-password
+sudo -u zagor .venv/bin/python -m app.cli.create_admin --username admin --replace-password
 ```
 
 ## 11. Локальний smoke test
@@ -241,7 +242,7 @@ sudo -u telegraminbox .venv/bin/python -m app.cli.create_admin --username admin 
 Запустіть web-адмінку локально:
 
 ```bash
-sudo -u telegraminbox .venv/bin/uvicorn app.web.main:app --host 127.0.0.1 --port 8000
+sudo -u zagor .venv/bin/uvicorn app.web.main:app --host 127.0.0.1 --port 8000
 ```
 
 З іншого terminal:
@@ -256,7 +257,7 @@ curl http://127.0.0.1:8000/version
 Запустіть bot вручну:
 
 ```bash
-sudo -u telegraminbox .venv/bin/python -m app.bot.main
+sudo -u zagor .venv/bin/python -m app.bot.main
 ```
 
 Після підтвердження startup зупиніть його. Production використовує systemd.
@@ -268,8 +269,12 @@ sudo -u telegraminbox .venv/bin/python -m app.bot.main
 ```bash
 sudo cp systemd/telegram-inbox-web.service /etc/systemd/system/telegram-inbox-web.service
 sudo cp systemd/telegram-inbox-bot.service /etc/systemd/system/telegram-inbox-bot.service
+grep -n "User\|Group" /etc/systemd/system/telegram-inbox-web.service
+grep -n "User\|Group" /etc/systemd/system/telegram-inbox-bot.service
 sudo systemctl daemon-reload
 ```
+
+Обидва service-файли мають показати `User=zagor` і `Group=zagor`.
 
 Увімкніть services:
 
@@ -455,10 +460,20 @@ sudo systemctl reload nginx
 
 ```bash
 cd /var/www/contactinboxbot
-sudo -u telegraminbox git pull
-sudo -u telegraminbox .venv/bin/pip install -r requirements.txt
-sudo -u telegraminbox .venv/bin/alembic upgrade head
+sudo -u zagor git pull
+sudo -u zagor .venv/bin/pip install -r requirements.txt
+sudo -u zagor .venv/bin/alembic upgrade head
+
+sudo cp systemd/telegram-inbox-web.service /etc/systemd/system/telegram-inbox-web.service
+sudo cp systemd/telegram-inbox-bot.service /etc/systemd/system/telegram-inbox-bot.service
+sudo systemctl daemon-reload
+
+sudo cp nginx/admintextbot.hotzagor.tech.conf /etc/nginx/sites-available/admintextbot.hotzagor.tech.conf
+sudo nginx -t
+
 sudo systemctl restart telegram-inbox-web telegram-inbox-bot
+sudo systemctl reload nginx
+curl http://127.0.0.1:8000/health
 ```
 
 Після restart перевірте logs.
@@ -469,20 +484,20 @@ sudo systemctl restart telegram-inbox-web telegram-inbox-bot
 
 ```bash
 sudo mkdir -p /var/backups/contactinboxbot
-sudo chown telegraminbox:telegraminbox /var/backups/contactinboxbot
+sudo chown zagor:zagor /var/backups/contactinboxbot
 sudo chmod 700 /var/backups/contactinboxbot
 ```
 
 Backup:
 
 ```bash
-sudo -u telegraminbox pg_dump -U telegram_inbox_user -h localhost telegram_inbox > /var/backups/contactinboxbot/telegram_inbox_$(date +%F_%H-%M).sql
+sudo -u zagor pg_dump -U telegram_inbox_user -h localhost telegram_inbox > /var/backups/contactinboxbot/telegram_inbox_$(date +%F_%H-%M).sql
 ```
 
 Restore:
 
 ```bash
-sudo -u telegraminbox psql -U telegram_inbox_user -h localhost telegram_inbox < /var/backups/contactinboxbot/telegram_inbox_backup.sql
+sudo -u zagor psql -U telegram_inbox_user -h localhost telegram_inbox < /var/backups/contactinboxbot/telegram_inbox_backup.sql
 ```
 
 Не зберігайте backups у публічній web-директорії.
@@ -528,10 +543,10 @@ Compose file прив'язує PostgreSQL до:
 Security audit:
 
 ```bash
-sudo -u telegraminbox .venv/bin/pip install -r requirements-security.txt
-sudo -u telegraminbox .venv/bin/python -m piptools compile --quiet --output-file requirements.lock requirements.txt
-sudo -u telegraminbox .venv/bin/python -m pip_audit -r requirements.lock
-sudo -u telegraminbox .venv/bin/python -m bandit -r app
+sudo -u zagor .venv/bin/pip install -r requirements-security.txt
+sudo -u zagor .venv/bin/python -m piptools compile --quiet --output-file requirements.lock requirements.txt
+sudo -u zagor .venv/bin/python -m pip_audit -r requirements.lock
+sudo -u zagor .venv/bin/python -m bandit -r app
 ```
 - Logs не показують passwords, tokens або session cookies.
 
@@ -605,27 +620,28 @@ python3 --version
 
 Use Python 3.12+ in production.
 
-## 3. Create Linux User
+## 3. Linux User
 
-Create a dedicated system user:
+This guide is adapted for the current VPS, where the project runs as user
+`zagor`. Confirm that the user exists:
 
 ```bash
-sudo adduser --system --group --home /var/www/contactinboxbot telegraminbox
+id zagor
 ```
 
 Create application directory:
 
 ```bash
 sudo mkdir -p /var/www/contactinboxbot
-sudo chown -R telegraminbox:telegraminbox /var/www/contactinboxbot
+sudo chown -R zagor:zagor /var/www/contactinboxbot
 ```
 
 ## 4. Clone Project
 
-Clone the repository as the dedicated user:
+Clone the repository as the deploy user:
 
 ```bash
-sudo -u telegraminbox git clone YOUR_REPOSITORY_URL /var/www/contactinboxbot
+sudo -u zagor git clone YOUR_REPOSITORY_URL /var/www/contactinboxbot
 ```
 
 Enter the project:
@@ -637,9 +653,9 @@ cd /var/www/contactinboxbot
 ## 5. Create Virtual Environment
 
 ```bash
-sudo -u telegraminbox python3 -m venv .venv
-sudo -u telegraminbox .venv/bin/pip install --upgrade pip
-sudo -u telegraminbox .venv/bin/pip install -r requirements.txt
+sudo -u zagor python3 -m venv .venv
+sudo -u zagor .venv/bin/pip install --upgrade pip
+sudo -u zagor .venv/bin/pip install -r requirements.txt
 ```
 
 ## 6. PostgreSQL
@@ -688,8 +704,8 @@ You need both values for `.env`.
 Create `.env`:
 
 ```bash
-sudo -u telegraminbox cp .env.example .env
-sudo -u telegraminbox nano .env
+sudo -u zagor cp .env.example .env
+sudo -u zagor nano .env
 ```
 
 Production `.env` should look like:
@@ -734,7 +750,7 @@ PY
 Secure `.env`:
 
 ```bash
-sudo chown telegraminbox:telegraminbox .env
+sudo chown zagor:zagor .env
 sudo chmod 600 .env
 ```
 
@@ -743,7 +759,7 @@ Never commit `.env`.
 ## 9. Run Alembic Migrations
 
 ```bash
-sudo -u telegraminbox .venv/bin/alembic upgrade head
+sudo -u zagor .venv/bin/alembic upgrade head
 ```
 
 This creates:
@@ -760,7 +776,7 @@ This creates:
 Run from an interactive terminal:
 
 ```bash
-sudo -u telegraminbox .venv/bin/python -m app.cli.create_admin
+sudo -u zagor .venv/bin/python -m app.cli.create_admin
 ```
 
 The command asks for username and password. The password is stored only as a hash.
@@ -768,7 +784,7 @@ The command asks for username and password. The password is stored only as a has
 If you need to replace the password later:
 
 ```bash
-sudo -u telegraminbox .venv/bin/python -m app.cli.create_admin --username admin --replace-password
+sudo -u zagor .venv/bin/python -m app.cli.create_admin --username admin --replace-password
 ```
 
 ## 11. Local Smoke Test
@@ -776,7 +792,7 @@ sudo -u telegraminbox .venv/bin/python -m app.cli.create_admin --username admin 
 Run web admin locally:
 
 ```bash
-sudo -u telegraminbox .venv/bin/uvicorn app.web.main:app --host 127.0.0.1 --port 8000
+sudo -u zagor .venv/bin/uvicorn app.web.main:app --host 127.0.0.1 --port 8000
 ```
 
 From another terminal:
@@ -791,7 +807,7 @@ Stop the manual Uvicorn process after the check.
 Run bot manually:
 
 ```bash
-sudo -u telegraminbox .venv/bin/python -m app.bot.main
+sudo -u zagor .venv/bin/python -m app.bot.main
 ```
 
 Stop it after confirming startup. Production uses systemd.
@@ -803,8 +819,12 @@ Copy service files:
 ```bash
 sudo cp systemd/telegram-inbox-web.service /etc/systemd/system/telegram-inbox-web.service
 sudo cp systemd/telegram-inbox-bot.service /etc/systemd/system/telegram-inbox-bot.service
+grep -n "User\|Group" /etc/systemd/system/telegram-inbox-web.service
+grep -n "User\|Group" /etc/systemd/system/telegram-inbox-bot.service
 sudo systemctl daemon-reload
 ```
+
+Both service files must show `User=zagor` and `Group=zagor`.
 
 Enable services:
 
@@ -990,10 +1010,20 @@ sudo systemctl reload nginx
 
 ```bash
 cd /var/www/contactinboxbot
-sudo -u telegraminbox git pull
-sudo -u telegraminbox .venv/bin/pip install -r requirements.txt
-sudo -u telegraminbox .venv/bin/alembic upgrade head
+sudo -u zagor git pull
+sudo -u zagor .venv/bin/pip install -r requirements.txt
+sudo -u zagor .venv/bin/alembic upgrade head
+
+sudo cp systemd/telegram-inbox-web.service /etc/systemd/system/telegram-inbox-web.service
+sudo cp systemd/telegram-inbox-bot.service /etc/systemd/system/telegram-inbox-bot.service
+sudo systemctl daemon-reload
+
+sudo cp nginx/admintextbot.hotzagor.tech.conf /etc/nginx/sites-available/admintextbot.hotzagor.tech.conf
+sudo nginx -t
+
 sudo systemctl restart telegram-inbox-web telegram-inbox-bot
+sudo systemctl reload nginx
+curl http://127.0.0.1:8000/health
 ```
 
 Check logs after restart.
@@ -1004,20 +1034,20 @@ Create backup directory:
 
 ```bash
 sudo mkdir -p /var/backups/contactinboxbot
-sudo chown telegraminbox:telegraminbox /var/backups/contactinboxbot
+sudo chown zagor:zagor /var/backups/contactinboxbot
 sudo chmod 700 /var/backups/contactinboxbot
 ```
 
 Backup:
 
 ```bash
-sudo -u telegraminbox pg_dump -U telegram_inbox_user -h localhost telegram_inbox > /var/backups/contactinboxbot/telegram_inbox_$(date +%F_%H-%M).sql
+sudo -u zagor pg_dump -U telegram_inbox_user -h localhost telegram_inbox > /var/backups/contactinboxbot/telegram_inbox_$(date +%F_%H-%M).sql
 ```
 
 Restore:
 
 ```bash
-sudo -u telegraminbox psql -U telegram_inbox_user -h localhost telegram_inbox < /var/backups/contactinboxbot/telegram_inbox_backup.sql
+sudo -u zagor psql -U telegram_inbox_user -h localhost telegram_inbox < /var/backups/contactinboxbot/telegram_inbox_backup.sql
 ```
 
 Do not store backups in a public web directory.
@@ -1063,10 +1093,10 @@ The Compose file binds PostgreSQL to:
 Security audit:
 
 ```bash
-sudo -u telegraminbox .venv/bin/pip install -r requirements-security.txt
-sudo -u telegraminbox .venv/bin/python -m piptools compile --quiet --output-file requirements.lock requirements.txt
-sudo -u telegraminbox .venv/bin/python -m pip_audit -r requirements.lock
-sudo -u telegraminbox .venv/bin/python -m bandit -r app
+sudo -u zagor .venv/bin/pip install -r requirements-security.txt
+sudo -u zagor .venv/bin/python -m piptools compile --quiet --output-file requirements.lock requirements.txt
+sudo -u zagor .venv/bin/python -m pip_audit -r requirements.lock
+sudo -u zagor .venv/bin/python -m bandit -r app
 ```
 - Logs do not expose passwords, tokens, or session cookies.
 

@@ -330,10 +330,21 @@ sudo systemctl restart telegram-inbox-web
 ```bash
 cd /var/www/contactinboxbot
 git pull
-. .venv/bin/activate
-pip install -r requirements.txt
-alembic upgrade head
+.venv/bin/pip install -r requirements.txt
+.venv/bin/alembic upgrade head
+
+sudo cp systemd/telegram-inbox-web.service /etc/systemd/system/telegram-inbox-web.service
+sudo cp systemd/telegram-inbox-bot.service /etc/systemd/system/telegram-inbox-bot.service
+grep -n "User\|Group" /etc/systemd/system/telegram-inbox-web.service
+grep -n "User\|Group" /etc/systemd/system/telegram-inbox-bot.service
+sudo systemctl daemon-reload
+
+sudo cp nginx/admintextbot.hotzagor.tech.conf /etc/nginx/sites-available/admintextbot.hotzagor.tech.conf
+sudo nginx -t
+
 sudo systemctl restart telegram-inbox-web telegram-inbox-bot
+sudo systemctl reload nginx
+curl http://127.0.0.1:8000/health
 ```
 
 ## Тестування і security review
@@ -728,10 +739,21 @@ Typical update flow:
 ```bash
 cd /var/www/contactinboxbot
 git pull
-. .venv/bin/activate
-pip install -r requirements.txt
-alembic upgrade head
+.venv/bin/pip install -r requirements.txt
+.venv/bin/alembic upgrade head
+
+sudo cp systemd/telegram-inbox-web.service /etc/systemd/system/telegram-inbox-web.service
+sudo cp systemd/telegram-inbox-bot.service /etc/systemd/system/telegram-inbox-bot.service
+grep -n "User\|Group" /etc/systemd/system/telegram-inbox-web.service
+grep -n "User\|Group" /etc/systemd/system/telegram-inbox-bot.service
+sudo systemctl daemon-reload
+
+sudo cp nginx/admintextbot.hotzagor.tech.conf /etc/nginx/sites-available/admintextbot.hotzagor.tech.conf
+sudo nginx -t
+
 sudo systemctl restart telegram-inbox-web telegram-inbox-bot
+sudo systemctl reload nginx
+curl http://127.0.0.1:8000/health
 ```
 
 ## Testing and Security Review
