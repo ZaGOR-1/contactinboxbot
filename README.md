@@ -1,5 +1,398 @@
 # Telegram Inbox Bot
 
+**Мова / Language:** [Українська](#українська) | [English](#english)
+
+---
+
+## Українська
+
+Production-ready Telegram inbox bot із приватною FastAPI web-адмінкою для:
+
+```text
+https://admintextbot.hotzagor.tech
+```
+
+Бот дозволяє людям писати вам у Telegram, не знаючи вашого особистого Telegram-акаунта. Вхідні повідомлення зберігаються в PostgreSQL. Приватна web-адмінка дозволяє одному адміну переглядати користувачів, читати переписки, блокувати користувачів і відповідати через Telegram-бота.
+
+[English version](#english)
+
+## Можливості
+
+- Telegram-бот на `aiogram 3`.
+- Приватна FastAPI web-адмінка.
+- PostgreSQL для production.
+- SQLite дозволений тільки поза production.
+- Async ORM на SQLAlchemy 2.x.
+- Alembic-міграції.
+- Адмін із хешованим паролем.
+- CLI-команда для створення першого адміна.
+- Signed secure session cookies.
+- CSRF-захист для форм.
+- Опціональна Telegram 2FA.
+- Захист login від brute-force атак.
+- Dashboard зі статистикою inbox.
+- Сторінка повідомлень із пошуком, фільтрами, пагінацією, деталями й mark-as-read.
+- Сторінка користувачів із пошуком, фільтром блокування, перепискою, reply flow, block/unblock і mark-as-read.
+- Rate limit повідомлень Telegram на користувача.
+- Telegram-сповіщення адміну про нові повідомлення.
+- Service endpoints `/health` і `/version`.
+- `/docs`, `/redoc` і `/openapi.json` вимкнені у production.
+- Nginx reverse proxy config для `admintextbot.hotzagor.tech`.
+- systemd service files для web і bot процесів.
+- Docker Compose для локального PostgreSQL.
+
+## Стек
+
+- Python 3.12+
+- aiogram 3
+- FastAPI
+- SQLAlchemy 2.x
+- Alembic
+- PostgreSQL
+- Jinja2
+- Gunicorn + UvicornWorker або Uvicorn
+- Nginx
+- Let's Encrypt / Certbot
+- systemd
+- pydantic-settings
+- passlib/bcrypt
+
+## Налаштування Telegram-бота
+
+Створіть бота:
+
+1. Відкрийте Telegram.
+2. Почніть чат із `@BotFather`.
+3. Виконайте `/newbot`.
+4. Дотримуйтесь інструкцій BotFather.
+5. Скопіюйте token у `.env` як `TELEGRAM_BOT_TOKEN`.
+
+Отримайте ваш admin Telegram ID:
+
+1. Напишіть боту на кшталт `@userinfobot`.
+2. Скопіюйте ваш numeric Telegram ID.
+3. Додайте його в `.env` як `ADMIN_TELEGRAM_ID`.
+
+Не комітьте token або admin ID у production-репозиторії.
+
+## DNS
+
+Перед production deployment створіть DNS A-запис:
+
+```text
+admintextbot.hotzagor.tech -> VPS_PUBLIC_IP
+```
+
+URL адмінки має бути:
+
+```text
+https://admintextbot.hotzagor.tech
+```
+
+## Конфігурація
+
+Скопіюйте приклад env-файлу:
+
+```bash
+cp .env.example .env
+```
+
+Замініть усі значення `CHANGE_ME`.
+
+Production-приклад:
+
+```env
+APP_ENV=production
+APP_NAME=Telegram Inbox Bot
+APP_VERSION=1.0.0
+
+DATABASE_URL=postgresql+asyncpg://telegram_inbox_user:CHANGE_ME@localhost:5432/telegram_inbox
+
+TELEGRAM_BOT_TOKEN=CHANGE_ME
+ADMIN_TELEGRAM_ID=CHANGE_ME
+
+SECRET_KEY=CHANGE_ME_GENERATE_LONG_RANDOM_STRING
+SESSION_COOKIE_NAME=telegram_inbox_session
+SESSION_COOKIE_SECURE=true
+SESSION_COOKIE_HTTPONLY=true
+SESSION_COOKIE_SAMESITE=lax
+
+ADMIN_PANEL_BASE_URL=https://admintextbot.hotzagor.tech
+
+ENABLE_TELEGRAM_2FA=true
+ENABLE_IP_ALLOWLIST=false
+ALLOWED_ADMIN_IPS=
+
+RATE_LIMIT_MESSAGES_PER_MINUTE=5
+
+LOG_LEVEL=INFO
+```
+
+Важливо:
+
+- `.env` ігнорується Git.
+- `.env.example` містить тільки placeholders.
+- `APP_ENV=production` вимагає PostgreSQL.
+- SQLite дозволений тільки поза production.
+- `SECRET_KEY` має бути довгим випадковим рядком.
+
+## Локальний PostgreSQL
+
+Запустіть локальний PostgreSQL через Docker Compose:
+
+```bash
+docker compose up -d postgres
+```
+
+Використайте цей локальний `DATABASE_URL`:
+
+```env
+DATABASE_URL=postgresql+asyncpg://telegram_inbox_user:CHANGE_ME_LOCAL_ONLY@localhost:5432/telegram_inbox
+```
+
+## Встановлення залежностей
+
+Створіть і активуйте virtual environment:
+
+```bash
+python -m venv .venv
+. .venv/bin/activate
+```
+
+Встановіть залежності:
+
+```bash
+pip install -r requirements.txt
+```
+
+Перевірте конфігурацію:
+
+```bash
+python -c "from app.core.config import get_settings; print(get_settings().safe_summary())"
+```
+
+## База даних
+
+Створіть PostgreSQL database і user у production:
+
+```bash
+sudo -u postgres psql
+```
+
+```sql
+CREATE DATABASE telegram_inbox;
+CREATE USER telegram_inbox_user WITH PASSWORD 'CHANGE_ME';
+GRANT ALL PRIVILEGES ON DATABASE telegram_inbox TO telegram_inbox_user;
+\q
+```
+
+Запустіть міграції:
+
+```bash
+alembic upgrade head
+```
+
+## Перший адмін
+
+Створіть першого адміна:
+
+```bash
+python -m app.cli.create_admin
+```
+
+Команда запитає:
+
+- username;
+- password;
+- повторне підтвердження password.
+
+Пароль не виводиться в термінал і зберігається тільки як hash.
+
+Якщо адмін уже існує, команда не створить другого без явного прапорця:
+
+```bash
+python -m app.cli.create_admin --allow-additional
+```
+
+Замінити пароль існуючого адміна:
+
+```bash
+python -m app.cli.create_admin --username admin --replace-password
+```
+
+## Локальний запуск
+
+Запустіть web-адмінку:
+
+```bash
+uvicorn app.web.main:app --host 127.0.0.1 --port 8000
+```
+
+Запустіть Telegram-бота:
+
+```bash
+python -m app.bot.main
+```
+
+Service checks:
+
+```bash
+curl http://127.0.0.1:8000/health
+curl http://127.0.0.1:8000/version
+```
+
+## Використання web-адмінки
+
+Відкрийте:
+
+```text
+https://admintextbot.hotzagor.tech
+```
+
+Без авторизації доступний тільки login flow.
+
+Після login:
+
+- Dashboard: `/`
+- Messages: `/messages`
+- Users: `/users`
+
+Сторінка messages:
+
+- пошук за текстом, username, Telegram ID і ім'ям;
+- фільтр за status, direction і date;
+- перегляд message detail;
+- позначення повідомлень як прочитаних.
+
+Сторінка users:
+
+- пошук за ім'ям, username і Telegram ID;
+- фільтр blocked/not blocked users;
+- user detail;
+- історія переписки;
+- відповідь через Telegram-бота;
+- block або unblock користувача;
+- позначення вхідних повідомлень як прочитаних.
+
+## Telegram user flow
+
+1. Користувач запускає Telegram-бота через `/start`.
+2. Бот створює або оновлює user record.
+3. Користувач надсилає текстове повідомлення.
+4. Бот застосовує rate limit.
+5. Повідомлення зберігається як `incoming/new`.
+6. Адмін отримує Telegram notification.
+7. Адмін відкриває web-адмінку і відповідає.
+8. Відповідь надсилається через бота і зберігається як `outgoing`.
+
+Непідтримувані файли/media отримують ввічливе fallback-повідомлення.
+
+## Production-файли
+
+Додані production-приклади:
+
+- `nginx/admintextbot.hotzagor.tech.conf`
+- `systemd/telegram-inbox-web.service`
+- `systemd/telegram-inbox-bot.service`
+- `docker-compose.yml`
+
+Web service має слухати тільки:
+
+```text
+127.0.0.1:8000
+```
+
+Публічний доступ має йти тільки через Nginx HTTPS.
+
+## Логи
+
+Production service logs:
+
+```bash
+journalctl -u telegram-inbox-bot -f
+journalctl -u telegram-inbox-web -f
+systemctl status telegram-inbox-bot
+systemctl status telegram-inbox-web
+```
+
+Перезапуск сервісів:
+
+```bash
+sudo systemctl restart telegram-inbox-bot
+sudo systemctl restart telegram-inbox-web
+```
+
+## Оновлення
+
+Типовий update flow:
+
+```bash
+cd /opt/telegram-inbox/app
+git pull
+. .venv/bin/activate
+pip install -r requirements.txt
+alembic upgrade head
+sudo systemctl restart telegram-inbox-web telegram-inbox-bot
+```
+
+## Тестування і security review
+
+Після встановлення залежностей запустіть:
+
+```bash
+python -m pytest
+```
+
+Test suite покриває core security helpers, web access control, repository flows, rate limiting, brute-force lockout, 2FA code handling, message filters, failed replies і admin notification formatting.
+
+Дивіться `SECURITY_REVIEW.md` для Phase 15 checklist, manual Telegram checks, deployment checks і residual risks.
+
+## Backup and restore
+
+Створити backup:
+
+```bash
+pg_dump -U telegram_inbox_user -h localhost telegram_inbox > telegram_inbox_backup.sql
+```
+
+Відновити backup:
+
+```bash
+psql -U telegram_inbox_user -h localhost telegram_inbox < telegram_inbox_backup.sql
+```
+
+Зберігайте backups поза публічними web-директоріями. Не комітьте backups у Git.
+
+## Security notes
+
+- Публічної реєстрації немає.
+- За замовчуванням очікується один адмін.
+- Паролі зберігаються тільки як hashes.
+- Secrets зберігаються тільки в `.env`.
+- `.env` не можна комітити.
+- `TELEGRAM_BOT_TOKEN` не можна комітити.
+- `SECRET_KEY` не можна комітити.
+- Production debug вимкнений.
+- Production `/docs`, `/redoc` і `/openapi.json` вимкнені.
+- Admin POST forms захищені CSRF.
+- Login має brute-force protection.
+- Optional Telegram 2FA підтримується.
+- Cookies мають `Secure`, `HttpOnly` і `SameSite`.
+- Nginx має публічно відкривати тільки HTTPS.
+- Публічні firewall ports мають бути тільки `22`, `80` і `443`.
+- PostgreSQL не має бути доступним з інтернету.
+- FastAPI port `8000` не має бути доступним з інтернету.
+
+## Deployment
+
+Дивіться `DEPLOY.md` для повного Ubuntu Server deployment runbook.
+
+[English version](#english) | [До початку](#telegram-inbox-bot)
+
+---
+
+## English
+
 Production-ready Telegram inbox bot with a private FastAPI web admin panel for:
 
 ```text
@@ -7,6 +400,8 @@ https://admintextbot.hotzagor.tech
 ```
 
 The bot lets people message you in Telegram without knowing your personal Telegram account. Incoming messages are stored in PostgreSQL. The private web admin panel lets the single admin view users, read conversations, block users, and reply through the Telegram bot.
+
+[Українська версія](#українська)
 
 ## Features
 
@@ -335,12 +730,9 @@ After installing dependencies, run:
 python -m pytest
 ```
 
-The test suite covers core security helpers, web access control, repository
-flows, rate limiting, brute-force lockout, 2FA code handling, message filters,
-failed replies, and admin notification formatting.
+The test suite covers core security helpers, web access control, repository flows, rate limiting, brute-force lockout, 2FA code handling, message filters, failed replies, and admin notification formatting.
 
-See `SECURITY_REVIEW.md` for the Phase 15 checklist, manual Telegram checks,
-deployment checks, and residual risks.
+See `SECURITY_REVIEW.md` for the Phase 15 checklist, manual Telegram checks, deployment checks, and residual risks.
 
 ## Backup and Restore
 
@@ -381,3 +773,5 @@ Store backups outside public web directories. Do not commit backups to Git.
 ## Deployment
 
 See `DEPLOY.md` for the full Ubuntu Server deployment runbook.
+
+[Українська версія](#українська) | [Back to top](#telegram-inbox-bot)
