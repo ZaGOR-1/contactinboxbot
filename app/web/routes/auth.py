@@ -124,6 +124,20 @@ async def login_submit(
                 {"error": str(exc), "username": username},
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+        except Exception:
+            await db_session.rollback()
+            return render_with_csrf(
+                request,
+                "login.html",
+                {
+                    "error": (
+                        "Telegram 2FA code could not be sent. Check TELEGRAM_BOT_TOKEN, "
+                        "ADMIN_TELEGRAM_ID, and make sure the admin has started the bot."
+                    ),
+                    "username": username,
+                },
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
         await db_session.commit()
         response = redirect_to("/2fa")
