@@ -6,7 +6,7 @@ import asyncio
 import sys
 from typing import Any
 
-from app.core.config import get_settings
+from app.core.config import get_settings, is_placeholder_config_value
 from app.core.logging import configure_logging, get_logger
 
 
@@ -30,7 +30,7 @@ def create_bot() -> Any:
 
     settings = get_settings()
     token = settings.telegram_bot_token.get_secret_value()
-    if not token or token == "CHANGE_ME":
+    if is_placeholder_config_value(token):
         raise RuntimeError("TELEGRAM_BOT_TOKEN is not configured.")
     return Bot(token=token)
 

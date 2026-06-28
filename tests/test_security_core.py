@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from types import SimpleNamespace
 
+from app.core.config import is_placeholder_config_value
 from app.core.permissions import get_client_ip
 from app.core.security import (
     CSRF_COOKIE_NAME,
@@ -137,6 +138,13 @@ def test_x_forwarded_for_is_used_only_from_trusted_proxy() -> None:
 
     assert get_client_ip(trusted_request, settings) == "203.0.113.10"
     assert get_client_ip(direct_request, settings) == "198.51.100.5"
+
+
+def test_placeholder_config_values_are_detected() -> None:
+    assert is_placeholder_config_value(None)
+    assert is_placeholder_config_value("")
+    assert is_placeholder_config_value("  CHANGE_ME  ")
+    assert not is_placeholder_config_value("configured-value")
 
 
 def test_env_files_and_examples_do_not_expose_real_secrets() -> None:

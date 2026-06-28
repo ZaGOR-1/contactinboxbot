@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Protocol
 
-from app.core.config import Settings, get_settings
+from app.core.config import Settings, get_settings, is_placeholder_config_value
 from app.core.logging import get_logger
 from app.db.models import Message, User
 
@@ -32,7 +32,7 @@ class TelegramService:
         message: Message,
     ) -> None:
         admin_telegram_id = self.settings.admin_telegram_id
-        if not admin_telegram_id or admin_telegram_id == "CHANGE_ME":
+        if is_placeholder_config_value(admin_telegram_id):
             logger.warning("ADMIN_TELEGRAM_ID is not configured; admin notification skipped")
             return
 
@@ -41,7 +41,7 @@ class TelegramService:
 
     async def send_text_to_user(self, *, user: User, text: str) -> int | None:
         token = self.settings.telegram_bot_token.get_secret_value()
-        if not token or token == "CHANGE_ME":
+        if is_placeholder_config_value(token):
             raise RuntimeError("TELEGRAM_BOT_TOKEN is not configured.")
 
         try:

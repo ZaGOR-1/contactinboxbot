@@ -25,6 +25,7 @@ else:
 
 AppEnv = Literal["development", "dev", "local", "test", "production"]
 SameSitePolicy = Literal["lax", "strict", "none"]
+PLACEHOLDER_CONFIG_VALUE = "CHANGE" + "_ME"
 
 
 class PlainSecret:
@@ -70,6 +71,13 @@ def _env_value(name: str, default: str | None = None) -> str:
 def _env_bool(name: str, default: bool) -> bool:
     value = _env_value(name, str(default)).strip().lower()
     return value in {"1", "true", "yes", "on"}
+
+
+def is_placeholder_config_value(value: str | None) -> bool:
+    if value is None:
+        return True
+    normalized = value.strip()
+    return not normalized or normalized == PLACEHOLDER_CONFIG_VALUE
 
 
 def _normalize_app_env(value: str) -> str:
