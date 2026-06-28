@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
-{% block title %}404 Not Found{% endblock %}
+{% block title %}404 {{ t(request, 'not_found_title') }}{% endblock %}
 
 {% block page_content %}
-<h1>404 Not Found</h1>
-<p>Сторінку не знайдено.</p>
+<h1>404 {{ t(request, 'not_found_title') }}</h1>
+<p>{{ t(request, 'not_found_message') }}</p>
 {% endblock %}

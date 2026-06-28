@@ -1,53 +1,53 @@
 {% extends "base.html" %}
 
-{% block title %}Users | Telegram Inbox Bot{% endblock %}
+{% block title %}{{ t(request, 'users') }} | Telegram Inbox Bot{% endblock %}
 
 {% block page_content %}
 <section class="page-heading">
   <div>
-    <h1>Users</h1>
-    <p class="muted">{{ pagination.total }} users found.</p>
+    <h1>{{ t(request, 'users') }}</h1>
+    <p class="muted">{{ t(request, 'users_found', count=pagination.total) }}</p>
   </div>
 </section>
 
 {% if flash %}
-  <p class="alert alert-success">{{ flash }}</p>
+  <p class="alert alert-success">{{ t(request, flash) if flash.startswith('flash.') else flash }}</p>
 {% endif %}
 
 <section class="panel filter-panel">
   <form class="filters-form users-filters" method="get" action="/users">
     <label>
-      Search
-      <input name="q" type="search" value="{{ filters.q }}" placeholder="Name, username, Telegram ID">
+      {{ t(request, 'search') }}
+      <input name="q" type="search" value="{{ filters.q }}" placeholder="{{ t(request, 'search_users_placeholder') }}">
     </label>
     <label>
-      Blocked
+      {{ t(request, 'blocked_filter') }}
       <select name="blocked">
-        <option value="" {% if not filters.blocked %}selected{% endif %}>All</option>
-        <option value="blocked" {% if filters.blocked == 'blocked' %}selected{% endif %}>Blocked</option>
-        <option value="active" {% if filters.blocked == 'active' %}selected{% endif %}>Not blocked</option>
+        <option value="" {% if not filters.blocked %}selected{% endif %}>{{ t(request, 'all') }}</option>
+        <option value="blocked" {% if filters.blocked == 'blocked' %}selected{% endif %}>{{ t(request, 'blocked') }}</option>
+        <option value="active" {% if filters.blocked == 'active' %}selected{% endif %}>{{ t(request, 'not_blocked') }}</option>
       </select>
     </label>
-    <button type="submit">Apply</button>
-    <a class="button-link" href="/users">Reset</a>
+    <button type="submit">{{ t(request, 'apply') }}</button>
+    <a class="button-link" href="/users">{{ t(request, 'reset') }}</a>
   </form>
 </section>
 
 <section class="panel">
   <div class="panel-header">
-    <h2>All users</h2>
+    <h2>{{ t(request, 'all_users') }}</h2>
   </div>
   {% if rows %}
     <div class="table-wrap">
       <table class="data-table">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Username</th>
-            <th>Telegram ID</th>
-            <th>Messages</th>
-            <th>Last message</th>
-            <th>Status</th>
+            <th>{{ t(request, 'name') }}</th>
+            <th>{{ t(request, 'username') }}</th>
+            <th>{{ t(request, 'telegram_id') }}</th>
+            <th>{{ t(request, 'messages') }}</th>
+            <th>{{ t(request, 'last_message') }}</th>
+            <th>{{ t(request, 'status') }}</th>
             <th></th>
           </tr>
         </thead>
@@ -67,12 +67,12 @@
               <td>{{ user.last_message_at.strftime('%Y-%m-%d %H:%M') if user.last_message_at else '-' }}</td>
               <td>
                 {% if user.is_blocked %}
-                  <span class="status-pill status-failed">blocked</span>
+                  <span class="status-pill status-failed">{{ t(request, 'blocked') }}</span>
                 {% else %}
-                  <span class="status-pill">active</span>
+                  <span class="status-pill">{{ t(request, 'active') }}</span>
                 {% endif %}
               </td>
-              <td class="table-actions"><a href="/users/{{ user.id }}">Open</a></td>
+              <td class="table-actions"><a href="/users/{{ user.id }}">{{ t(request, 'open') }}</a></td>
             </tr>
           {% endfor %}
         </tbody>
@@ -80,15 +80,15 @@
     </div>
     <div class="pagination">
       {% if pagination.prev_url %}
-        <a class="button-link" href="{{ pagination.prev_url }}">Previous</a>
+        <a class="button-link" href="{{ pagination.prev_url }}">{{ t(request, 'previous') }}</a>
       {% endif %}
-      <span>Page {{ pagination.page }} of {{ pagination.pages }}</span>
+      <span>{{ t(request, 'page_of', page=pagination.page, pages=pagination.pages) }}</span>
       {% if pagination.next_url %}
-        <a class="button-link" href="{{ pagination.next_url }}">Next</a>
+        <a class="button-link" href="{{ pagination.next_url }}">{{ t(request, 'next') }}</a>
       {% endif %}
     </div>
   {% else %}
-    <p class="empty-state">No users match these filters.</p>
+    <p class="empty-state">{{ t(request, 'no_users_filters') }}</p>
   {% endif %}
 </section>
 {% endblock %}

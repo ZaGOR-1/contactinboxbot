@@ -168,6 +168,46 @@ a:hover {
   margin: 0;
 }
 
+.admin-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.language-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-soft);
+}
+
+.language-switch a {
+  min-width: 34px;
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.language-switch a:hover,
+.language-switch a.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.auth-language {
+  margin: 0 0 18px auto;
+}
+
 .logout-form button,
 .button-link {
   min-height: 36px;
@@ -630,6 +670,10 @@ a:hover {
     order: 3;
     overflow-x: auto;
     padding-bottom: 2px;
+  }
+
+  .admin-actions {
+    gap: 8px;
   }
 
   .page-heading {

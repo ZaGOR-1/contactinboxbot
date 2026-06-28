@@ -28,6 +28,10 @@ def create_app(settings: Settings | None = None) -> Any:
     from starlette.exceptions import HTTPException as StarletteHTTPException
 
     templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+    from app.web.i18n import get_language, translate
+
+    templates.env.globals["current_lang"] = get_language
+    templates.env.globals["t"] = translate
 
     app = FastAPI(
         title=app_settings.app_name,
@@ -45,11 +49,13 @@ def create_app(settings: Settings | None = None) -> Any:
 
     from app.web.routes.auth import router as auth_router
     from app.web.routes.dashboard import router as dashboard_router
+    from app.web.routes.language import router as language_router
     from app.web.routes.messages import router as messages_router
     from app.web.routes.service import router as service_router
     from app.web.routes.users import router as users_router
 
     app.include_router(service_router)
+    app.include_router(language_router)
     app.include_router(auth_router)
     app.include_router(dashboard_router)
     app.include_router(messages_router)

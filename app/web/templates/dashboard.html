@@ -1,39 +1,39 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard | Telegram Inbox Bot{% endblock %}
+{% block title %}{{ t(request, 'dashboard') }} | Telegram Inbox Bot{% endblock %}
 
 {% block page_content %}
 <section class="page-heading">
   <div>
-    <h1>Dashboard</h1>
-    <p class="muted">Inbox overview and newest messages.</p>
+    <h1>{{ t(request, 'dashboard') }}</h1>
+    <p class="muted">{{ t(request, 'dashboard_description') }}</p>
   </div>
-  <a class="button-link" href="/messages?status=new">Unread messages</a>
+  <a class="button-link" href="/messages?status=new">{{ t(request, 'unread_messages') }}</a>
 </section>
 
-<section class="stats-grid" aria-label="Dashboard stats">
+<section class="stats-grid" aria-label="{{ t(request, 'dashboard_stats') }}">
   <article class="stat-card">
-    <span>Total users</span>
+    <span>{{ t(request, 'total_users') }}</span>
     <strong>{{ stats.total_users }}</strong>
   </article>
   <article class="stat-card">
-    <span>Total messages</span>
+    <span>{{ t(request, 'total_messages') }}</span>
     <strong>{{ stats.total_messages }}</strong>
   </article>
   <article class="stat-card stat-new">
-    <span>New messages</span>
+    <span>{{ t(request, 'new_messages') }}</span>
     <strong>{{ stats.new_messages }}</strong>
   </article>
   <article class="stat-card">
-    <span>Blocked users</span>
+    <span>{{ t(request, 'blocked_users') }}</span>
     <strong>{{ stats.blocked_users }}</strong>
   </article>
 </section>
 
 <section class="panel">
   <div class="panel-header">
-    <h2>Latest messages</h2>
-    <a href="/messages">View all</a>
+    <h2>{{ t(request, 'latest_messages') }}</h2>
+    <a href="/messages">{{ t(request, 'view_all') }}</a>
   </div>
   {% if latest_messages %}
     <div class="table-wrap">
@@ -41,12 +41,12 @@
         <thead>
           <tr>
             <th>ID</th>
-            <th>Date</th>
-            <th>User</th>
-            <th>Username</th>
-            <th>Text</th>
-            <th>Direction</th>
-            <th>Status</th>
+            <th>{{ t(request, 'date') }}</th>
+            <th>{{ t(request, 'user') }}</th>
+            <th>{{ t(request, 'username') }}</th>
+            <th>{{ t(request, 'text') }}</th>
+            <th>{{ t(request, 'direction') }}</th>
+            <th>{{ t(request, 'status') }}</th>
             <th></th>
           </tr>
         </thead>
@@ -64,16 +64,16 @@
               </td>
               <td>{{ '@' ~ message.user.username if message.user.username else '-' }}</td>
               <td class="truncate" title="{{ message.text }}">{{ message.text }}</td>
-              <td>{{ message.direction.value }}</td>
-              <td><span class="status-pill status-{{ message.status.value }}">{{ message.status.value }}</span></td>
-              <td class="table-actions"><a href="/users/{{ message.user_id }}">Open</a></td>
+              <td>{{ t(request, 'direction.' ~ message.direction.value) }}</td>
+              <td><span class="status-pill status-{{ message.status.value }}">{{ t(request, 'status.' ~ message.status.value) }}</span></td>
+              <td class="table-actions"><a href="/users/{{ message.user_id }}">{{ t(request, 'open') }}</a></td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
   {% else %}
-    <p class="empty-state">No messages yet.</p>
+    <p class="empty-state">{{ t(request, 'no_messages') }}</p>
   {% endif %}
 </section>
 {% endblock %}

@@ -1,23 +1,24 @@
 {% extends "base.html" %}
 
-{% block title %}Login | Telegram Inbox Bot{% endblock %}
+{% block title %}{{ t(request, 'login') }} | Telegram Inbox Bot{% endblock %}
 
 {% block page_content %}
 <section class="auth-shell">
   <form class="auth-panel" method="post" action="/login">
-    <h1>Admin Login</h1>
+    {{ language_switch(request, "auth-language") }}
+    <h1>{{ t(request, 'admin_login') }}</h1>
     {% if message %}
-      <p class="alert alert-success">{{ message }}</p>
+      <p class="alert alert-success">{{ t(request, message) if message.startswith('flash.') else message }}</p>
     {% endif %}
     {% if error %}
-      <p class="alert alert-error">{{ error }}</p>
+      <p class="alert alert-error">{{ t(request, error) if error.startswith('flash.') else error }}</p>
     {% endif %}
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    <label for="username">Username</label>
+    <label for="username">{{ t(request, 'username') }}</label>
     <input id="username" name="username" type="text" autocomplete="username" value="{{ username or '' }}" required autofocus>
-    <label for="password">Password</label>
+    <label for="password">{{ t(request, 'password') }}</label>
     <input id="password" name="password" type="password" autocomplete="current-password" required>
-    <button type="submit">Login</button>
+    <button type="submit">{{ t(request, 'login') }}</button>
   </form>
 </section>
 {% endblock %}

@@ -122,9 +122,9 @@ async def reply_to_user(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     if not reply_text:
-        return redirect_to_user(user_id, error="Reply text is required.")
+        return redirect_to_user(user_id, error="flash.reply_required")
     if user.is_blocked:
-        return redirect_to_user(user_id, error="User is blocked.")
+        return redirect_to_user(user_id, error="flash.user_is_blocked")
 
     message_service = MessageService(db_session)
     try:
@@ -140,7 +140,7 @@ async def reply_to_user(
             error_text=str(exc),
         )
         await db_session.commit()
-        return redirect_to_user(user_id, error="Reply failed. Details were saved.")
+        return redirect_to_user(user_id, error="flash.reply_failed")
 
     await message_service.save_outgoing_text(
         user=user,
@@ -150,7 +150,7 @@ async def reply_to_user(
     )
     await MessageRepository(db_session).mark_user_incoming_as_answered(user.id)
     await db_session.commit()
-    return redirect_to_user(user_id, message="Reply sent.")
+    return redirect_to_user(user_id, message="flash.reply_sent")
 
 
 @router.post("/users/{user_id}/block")
@@ -165,7 +165,7 @@ async def block_user(
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     await db_session.commit()
-    return redirect_to_user(user_id, message="User blocked.")
+    return redirect_to_user(user_id, message="flash.user_blocked")
 
 
 @router.post("/users/{user_id}/unblock")
@@ -180,7 +180,7 @@ async def unblock_user(
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     await db_session.commit()
-    return redirect_to_user(user_id, message="User unblocked.")
+    return redirect_to_user(user_id, message="flash.user_unblocked")
 
 
 @router.post("/users/{user_id}/read")
@@ -196,7 +196,7 @@ async def mark_user_messages_read(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     await MessageRepository(db_session).mark_user_incoming_as_read(user.id)
     await db_session.commit()
-    return redirect_to_user(user_id, message="Incoming messages marked as read.")
+    return redirect_to_user(user_id, message="flash.incoming_read")
 
 
 def parse_blocked_filter(value: str | None) -> bool | None:
@@ -213,6 +213,7 @@ def parse_blocked_filter(value: str | None) -> bool | None:
 def build_users_url(request: Request, page: int) -> str:
     params = dict(request.query_params)
     params.pop("message", None)
+    params.pop("error", None)
     params["page"] = str(page)
     return f"/users?{urlencode(params)}"
 

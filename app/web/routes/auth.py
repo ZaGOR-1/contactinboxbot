@@ -92,7 +92,7 @@ async def login_submit(
         return render_with_csrf(
             request,
             "login.html",
-            {"error": "Username and password are required.", "username": username},
+            {"error": "flash.credentials_required", "username": username},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -233,7 +233,7 @@ async def logout_submit(request: Request) -> RedirectResponse:
     require_admin_session(request, app_settings)
     await verify_csrf_request(request, app_settings)
 
-    response = redirect_to("/login?message=Logged out.")
+    response = redirect_to("/login?message=flash.logged_out")
     clear_session_cookie(response, app_settings)
     clear_pending_2fa_cookie(response, app_settings)
     clear_csrf_cookie(response, app_settings)

@@ -142,7 +142,7 @@ async def mark_message_read(
     next_url = safe_next_url(str((await request.form()).get("next") or f"/messages/{message_id}"))
     separator = "&" if "?" in next_url else "?"
     return RedirectResponse(
-        f"{next_url}{separator}message=Marked as read.",
+        f"{next_url}{separator}message=flash.marked_read",
         status_code=status.HTTP_303_SEE_OTHER,
     )
 
@@ -191,6 +191,7 @@ def parse_date(value: str | None) -> date | None:
 def build_messages_url(request: Request, page: int) -> str:
     params = dict(request.query_params)
     params.pop("message", None)
+    params.pop("error", None)
     params["page"] = str(page)
     return f"/messages?{urlencode(params)}"
 

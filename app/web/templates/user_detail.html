@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}User {{ user.telegram_id }} | Telegram Inbox Bot{% endblock %}
+{% block title %}{{ t(request, 'user') }} {{ user.telegram_id }} | Telegram Inbox Bot{% endblock %}
 
 {% block page_content %}
 <section class="page-heading">
@@ -11,63 +11,63 @@
       {% elif user.username %}
         @{{ user.username }}
       {% else %}
-        User {{ user.telegram_id }}
+        {{ t(request, 'user_fallback', telegram_id=user.telegram_id) }}
       {% endif %}
     </h1>
-    <p class="muted">Telegram ID: {{ user.telegram_id }}</p>
+    <p class="muted">{{ t(request, 'telegram_id') }}: {{ user.telegram_id }}</p>
   </div>
-  <a class="button-link" href="/users">Back to users</a>
+  <a class="button-link" href="/users">{{ t(request, 'back_to_users') }}</a>
 </section>
 
 {% if flash %}
-  <p class="alert alert-success">{{ flash }}</p>
+  <p class="alert alert-success">{{ t(request, flash) if flash.startswith('flash.') else flash }}</p>
 {% endif %}
 {% if error %}
-  <p class="alert alert-error">{{ error }}</p>
+  <p class="alert alert-error">{{ t(request, error) if error.startswith('flash.') else error }}</p>
 {% endif %}
 
 <section class="user-layout">
   <aside class="panel detail-panel">
     <div class="panel-header">
-      <h2>User data</h2>
+      <h2>{{ t(request, 'user_data') }}</h2>
       {% if user.is_blocked %}
-        <span class="status-pill status-failed">blocked</span>
+        <span class="status-pill status-failed">{{ t(request, 'blocked') }}</span>
       {% else %}
-        <span class="status-pill">active</span>
+        <span class="status-pill">{{ t(request, 'active') }}</span>
       {% endif %}
     </div>
     <dl class="detail-list user-detail-list">
-      <dt>Telegram ID</dt>
+      <dt>{{ t(request, 'telegram_id') }}</dt>
       <dd>{{ user.telegram_id }}</dd>
-      <dt>Username</dt>
+      <dt>{{ t(request, 'username') }}</dt>
       <dd>{{ '@' ~ user.username if user.username else '-' }}</dd>
-      <dt>First name</dt>
+      <dt>{{ t(request, 'first_name') }}</dt>
       <dd>{{ user.first_name or '-' }}</dd>
-      <dt>Last name</dt>
+      <dt>{{ t(request, 'last_name') }}</dt>
       <dd>{{ user.last_name or '-' }}</dd>
-      <dt>Language</dt>
+      <dt>{{ t(request, 'language') }}</dt>
       <dd>{{ user.language_code or '-' }}</dd>
-      <dt>Created</dt>
+      <dt>{{ t(request, 'created') }}</dt>
       <dd>{{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else '-' }}</dd>
-      <dt>Updated</dt>
+      <dt>{{ t(request, 'updated') }}</dt>
       <dd>{{ user.updated_at.strftime('%Y-%m-%d %H:%M') if user.updated_at else '-' }}</dd>
-      <dt>Last message</dt>
+      <dt>{{ t(request, 'last_message') }}</dt>
       <dd>{{ user.last_message_at.strftime('%Y-%m-%d %H:%M') if user.last_message_at else '-' }}</dd>
     </dl>
     <div class="action-stack">
       <form method="post" action="/users/{{ user.id }}/read">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <button type="submit">Mark as read</button>
+        <button type="submit">{{ t(request, 'mark_as_read') }}</button>
       </form>
       {% if user.is_blocked %}
         <form method="post" action="/users/{{ user.id }}/unblock">
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-          <button type="submit">Unblock</button>
+          <button type="submit">{{ t(request, 'unblock') }}</button>
         </form>
       {% else %}
-        <form method="post" action="/users/{{ user.id }}/block" data-confirm="Block this user?">
+        <form method="post" action="/users/{{ user.id }}/block" data-confirm="{{ t(request, 'block_confirm') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-          <button class="danger-button" type="submit">Block</button>
+          <button class="danger-button" type="submit">{{ t(request, 'block') }}</button>
         </form>
       {% endif %}
     </div>
@@ -75,15 +75,15 @@
 
   <section class="panel conversation-panel">
     <div class="panel-header">
-      <h2>Conversation</h2>
+      <h2>{{ t(request, 'conversation') }}</h2>
     </div>
     {% if conversation %}
       <div class="chat-list" data-autoscroll="bottom">
         {% for message in conversation %}
           <article class="chat-message chat-{{ message.direction.value }} {% if message.status.value == 'new' %}chat-new{% endif %}">
             <div class="chat-meta">
-              <span>{{ message.direction.value }}</span>
-              <span>{{ message.status.value }}</span>
+              <span>{{ t(request, 'direction.' ~ message.direction.value) }}</span>
+              <span>{{ t(request, 'status.' ~ message.status.value) }}</span>
               <span>{{ message.created_at.strftime('%Y-%m-%d %H:%M') if message.created_at else '-' }}</span>
             </div>
             <div class="chat-bubble">{{ message.text }}</div>
@@ -94,14 +94,14 @@
         {% endfor %}
       </div>
     {% else %}
-      <p class="empty-state">No conversation yet.</p>
+      <p class="empty-state">{{ t(request, 'no_conversation') }}</p>
     {% endif %}
 
     <form class="reply-form" method="post" action="/users/{{ user.id }}/reply">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <label for="reply-text">Reply</label>
+      <label for="reply-text">{{ t(request, 'reply') }}</label>
       <textarea id="reply-text" name="text" rows="5" {% if user.is_blocked %}disabled{% endif %} required></textarea>
-      <button type="submit" {% if user.is_blocked %}disabled{% endif %}>Send reply</button>
+      <button type="submit" {% if user.is_blocked %}disabled{% endif %}>{{ t(request, 'send_reply') }}</button>
     </form>
   </section>
 </section>
